@@ -1,0 +1,1596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Duo/5 Helper — Crimson Desert</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&family=Google+Sans+Display:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
+<style>
+/* ── Reset & base ───────────────────────────────────────── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans','Inter',sans-serif;font-size:14px;overflow:hidden;}
+.ico{font-family:'Material Symbols Outlined';font-variation-settings:'FILL' 0,'wght' 300,'GRAD' 0,'opsz' 24;font-style:normal;display:inline-block;vertical-align:middle;font-size:17px;line-height:1;user-select:none;}
+
+/* ── Background — center only ───────────────────────────── */
+.col-c{background-image:url('Images/Background.png');background-size:cover;background-position:center;}
+
+/* ── Scrollbar ──────────────────────────────────────────── */
+::-webkit-scrollbar{width:3px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:2px;}
+::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,.3);}
+
+/* ── Design tokens ──────────────────────────────────────── */
+:root{
+  --c-black:#0a0a0a;
+  --c-panel:#111111;
+  --c-panel2:#161616;
+  --c-border:rgba(255,255,255,.08);
+  --c-border2:rgba(255,255,255,.05);
+  --c-red:#c0192e;
+  --c-red-dim:rgba(192,25,46,.12);
+  --c-red-line:rgba(192,25,46,.3);
+  --c-gold:#d4a843;
+  --c-gold-dim:rgba(212,168,67,.1);
+  --c-gold-line:rgba(212,168,67,.25);
+  --c-white:#ffffff;
+  --c-muted:rgba(255,255,255,.80);
+  --c-faint:rgba(255,255,255,.50);
+  --c-win:#3db870;
+  --c-lose:#d94f4f;
+  --c-tie:#b8a030;
+  --c-card-red:#b03030;
+  --c-card-yellow:#8a6c10;
+  --col-side:310px;
+}
+
+/* ── Layout shell ───────────────────────────────────────── */
+.shell{display:flex;flex-direction:column;height:100vh;max-width:1440px;margin:0 auto;}
+
+/* ── Top bar ────────────────────────────────────────────── */
+.bar{
+  height:52px;flex-shrink:0;display:flex;align-items:center;
+  justify-content:space-between;padding:0 28px;
+  background:var(--c-black);
+  border-bottom:1px solid var(--c-border);
+}
+.bar-brand{display:flex;align-items:center;gap:16px;}
+.bar-title{font-size:15px;font-weight:700;color:#fff;letter-spacing:-.01em;}
+.bar-sub{font-size:10px;color:var(--c-faint);text-transform:uppercase;letter-spacing:.18em;}
+.bar-right{display:flex;align-items:center;gap:10px;}
+
+.lang-seg{display:flex;gap:1px;background:var(--c-border);border-radius:3px;overflow:hidden;padding:1px;}
+.lang-seg button{display:flex;align-items:center;gap:5px;padding:4px 11px;border:none;background:transparent;color:var(--c-faint);font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;letter-spacing:.06em;border-radius:2px;}
+.lang-seg button.on{background:#fff;color:#000;}
+.lang-seg button:not(.on):hover{color:#fff;}
+.flag{font-size:13px;}
+
+/* ── Mode tabs ──────────────────────────────────────────── */
+.mode-tabs{display:flex;gap:0;border:1px solid var(--c-border);border-radius:3px;overflow:hidden;}
+.mode-tab{padding:5px 18px;border:none;background:transparent;color:var(--c-faint);font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .12s;letter-spacing:.08em;text-transform:uppercase;}
+.mode-tab+.mode-tab{border-left:1px solid var(--c-border);}
+.mode-tab.on{background:#fff;color:#000;}
+.mode-tab:not(.on):hover{color:#fff;}
+
+/* ── Three-column arena ─────────────────────────────────── */
+.arena{flex:1;display:grid;grid-template-columns:var(--col-side) 1fr var(--col-side);grid-template-rows:1fr auto;min-height:0;overflow:hidden;}
+.col{display:flex;flex-direction:column;overflow-y:auto;min-height:0;}
+.col-l{grid-column:1;grid-row:1;background:var(--c-panel);border-right:1px solid var(--c-border);}
+.col-c{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow-y:auto;min-height:0;}
+.col-r{grid-column:3;grid-row:1;background:var(--c-panel);border-left:1px solid var(--c-border);}
+.col-foot{grid-column:1/span 3;grid-row:2;border-top:1px solid var(--c-border);background:var(--c-black);}
+
+/* ── Center frost overlay ───────────────────────────────── */
+.stage-bg{
+  position:absolute;inset:0;pointer-events:none;z-index:0;
+  background:rgba(5,5,5,.82);
+  backdrop-filter:blur(20px) saturate(110%);
+  -webkit-backdrop-filter:blur(20px) saturate(110%);
+}
+.stage-bg::after{
+  content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 35%,rgba(192,25,46,.07) 0%,transparent 60%);
+}
+.stage-empty{display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;position:relative;z-index:1;opacity:.4;}
+.stage-empty .ico{font-size:44px;color:var(--c-gold);}
+.stage-empty p{font-size:13px;color:var(--c-muted);line-height:1.5;letter-spacing:.02em;}
+
+/* ── Column header ──────────────────────────────────────── */
+.col-hd{padding:14px 18px 12px;border-bottom:1px solid var(--c-border);flex-shrink:0;display:flex;align-items:center;justify-content:space-between;}
+.col-ttl{font-size:10px;font-weight:700;color:var(--c-gold);text-transform:uppercase;letter-spacing:.18em;display:flex;align-items:center;gap:7px;}
+.col-ttl .ico{font-size:14px;}
+.col-bd{padding:16px 18px;flex:1;}
+
+/* ── Card chips ─────────────────────────────────────────── */
+.chips{display:flex;gap:8px;margin-bottom:14px;}
+.chip{
+  flex:1;min-height:88px;border-radius:4px;
+  border:1px solid var(--c-border);
+  background:var(--c-panel2);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:3px;position:relative;overflow:hidden;transition:all .18s;
+}
+.chip.filled::before{
+  content:'';position:absolute;inset:0;
+  background-image:var(--card-img);background-size:cover;background-position:center;
+  opacity:.14;transition:opacity .18s;
+}
+.chip.filled{border-color:rgba(255,255,255,.15);}
+.chip.r{background:rgba(160,32,32,.15);border-color:rgba(160,32,32,.4);}
+.chip.y{background:rgba(130,100,10,.15);border-color:rgba(130,100,10,.4);}
+.chip-n{font-size:30px;font-weight:700;line-height:1;position:relative;z-index:1;}
+.chip-c{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.14em;opacity:.6;position:relative;z-index:1;}
+.chip-e{font-size:10px;color:var(--c-faint);letter-spacing:.08em;}
+.chip-corner{position:absolute;top:5px;right:7px;font-size:9px;font-weight:700;opacity:.3;z-index:1;}
+
+/* ── Card selector ──────────────────────────────────────── */
+.cslot{margin-bottom:11px;}
+.cslot:last-child{margin-bottom:0;}
+.clabel{font-size:9px;font-weight:700;color:var(--c-faint);text-transform:uppercase;letter-spacing:.16em;margin-bottom:6px;}
+.card-row{display:flex;gap:3px;margin-bottom:3px;flex-wrap:wrap;}
+.card-row:last-child{margin-bottom:0;}
+.crb{width:25px;height:25px;border-radius:2px;border:1px solid var(--c-border2);font-size:11px;font-weight:500;font-family:'Google Sans','Inter',sans-serif;cursor:pointer;transition:all .1s;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:transparent;color:var(--c-muted);}
+.crb.r{color:rgba(220,100,100,.8);border-color:rgba(160,40,40,.3);background:rgba(160,32,32,.08);}
+.crb.r:hover:not(.sel):not(.taken){background:rgba(160,32,32,.22);border-color:rgba(160,32,32,.6);color:#e07070;}
+.crb.r.sel{background:var(--c-card-red);color:#fff;border-color:var(--c-card-red);font-weight:700;}
+.crb.y{color:rgba(200,160,60,.8);border-color:rgba(130,100,10,.3);background:rgba(130,100,10,.08);}
+.crb.y:hover:not(.sel):not(.taken){background:rgba(130,100,10,.22);border-color:rgba(130,100,10,.6);color:#d4b84a;}
+.crb.y.sel{background:var(--c-card-yellow);color:#fff;border-color:var(--c-card-yellow);font-weight:700;}
+.crb.taken{opacity:.15;cursor:not-allowed;}
+
+/* ── Five-Card slot — distinct bordered panel per card ───── */
+.cslot5{
+  border:1px solid var(--c-border);
+  border-radius:3px;
+  background:var(--c-panel2);
+  padding:9px 10px 8px;
+  margin-bottom:6px;
+  transition:border-color .15s;
+}
+.cslot5:last-child{margin-bottom:0;}
+.cslot5.filled{border-color:rgba(255,255,255,.18);}
+.cslot5.filled-r{border-color:rgba(160,32,32,.5);background:rgba(160,32,32,.06);}
+.cslot5.filled-y{border-color:rgba(130,100,10,.5);background:rgba(130,100,10,.06);}
+.cslot5-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:7px;}
+.cslot5-num{
+  width:18px;height:18px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;flex-shrink:0;
+  border:1px solid var(--c-border);color:var(--c-faint);
+  background:transparent;
+}
+.cslot5-num.done-r{background:var(--c-card-red);border-color:var(--c-card-red);color:#fff;}
+.cslot5-num.done-y{background:var(--c-card-yellow);border-color:var(--c-card-yellow);color:#fff;}
+.cslot5-lbl{font-size:9px;font-weight:700;color:var(--c-faint);text-transform:uppercase;letter-spacing:.16em;margin-left:6px;flex:1;}
+.cslot5-val{font-size:11px;font-weight:700;color:var(--c-muted);letter-spacing:.04em;}
+
+.hand-pill-inline{margin-top:10px;padding:8px 12px;background:var(--c-gold-dim);border:1px solid var(--c-gold-line);border-radius:3px;text-align:center;font-size:14px;font-weight:700;color:var(--c-gold);letter-spacing:.04em;}
+.hint{margin-top:6px;padding:7px 10px;border:1px solid var(--c-border2);border-radius:2px;font-size:11px;color:var(--c-faint);text-align:center;letter-spacing:.04em;}
+.div{height:1px;background:var(--c-border2);margin:10px 0;}
+
+/* ── Opp count selector ─────────────────────────────────── */
+.opp-count-sel{display:flex;align-items:center;}
+.opp-count-btns{display:flex;border:1px solid var(--c-border);border-radius:2px;overflow:hidden;}
+.ocb{width:30px;height:24px;border:none;background:transparent;color:var(--c-faint);font-family:'Google Sans','Inter',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .1s;}
+.ocb+.ocb{border-left:1px solid var(--c-border);}
+.ocb.on{background:#fff;color:#000;}
+.ocb:not(.on):hover{color:#fff;}
+
+/* ── Opp cross ──────────────────────────────────────────── */
+.opp-cross{width:20px;height:20px;border-radius:2px;border:1px solid var(--c-border);background:transparent;color:var(--c-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .1s;flex-shrink:0;}
+.opp-cross:hover{border-color:var(--c-red-line);color:var(--c-red);}
+.opp-cross .ico{font-size:12px;}
+
+/* ── Fold button ────────────────────────────────────────── */
+.fold-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:2px;font-size:10px;font-weight:700;font-family:'Google Sans','Inter',sans-serif;cursor:pointer;transition:all .12s;letter-spacing:.06em;border:1px solid rgba(200,160,30,.3);background:rgba(200,160,30,.06);color:rgba(200,160,30,.8);}
+.fold-btn:hover{background:rgba(200,160,30,.14);border-color:rgba(200,160,30,.55);}
+.fold-btn.folded{border-color:rgba(200,160,30,.65);background:rgba(200,160,30,.18);color:#f5d060;}
+.fold-btn .ico{font-size:11px;}
+
+/* ── Center probability ─────────────────────────────────── */
+.prob-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.45em;color:var(--c-faint);margin-bottom:12px;text-align:center;position:relative;z-index:1;}
+.prob-num{font-weight:700;line-height:1;text-align:center;margin-bottom:12px;width:100%;position:relative;z-index:1;}
+.prob-num .n{font-size:108px;letter-spacing:-.03em;}
+.prob-num .s{font-size:40px;vertical-align:super;opacity:.7;}
+.prob-num.win .n,.prob-num.win .s{color:var(--c-win);text-shadow:0 0 48px rgba(61,184,112,.3);}
+.prob-num.caution .n,.prob-num.caution .s{color:var(--c-gold);text-shadow:0 0 48px rgba(212,168,67,.3);}
+.prob-num.danger .n,.prob-num.danger .s{color:var(--c-lose);text-shadow:0 0 48px rgba(217,79,79,.3);}
+
+.sbar-wrap{width:100%;max-width:300px;margin-bottom:16px;position:relative;z-index:1;}
+.sbar{display:flex;height:3px;border-radius:0;overflow:hidden;margin-bottom:8px;background:rgba(255,255,255,.06);}
+.sbar .sw{background:var(--c-win);}
+.sbar .st{background:var(--c-tie);}
+.sbar .sl{background:var(--c-lose);}
+.sleg{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:10px;letter-spacing:.04em;}
+
+.sit-wrap{width:100%;max-width:300px;margin-bottom:14px;position:relative;z-index:1;}
+.sit-lbl{font-size:9px;font-weight:700;color:var(--c-faint);text-transform:uppercase;letter-spacing:.18em;margin-bottom:7px;text-align:center;}
+.sit-seg{display:flex;border:1px solid var(--c-border);border-radius:2px;overflow:hidden;}
+.sit-seg button{flex:1;padding:8px;border:none;font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:all .12s;background:transparent;color:var(--c-faint);display:flex;align-items:center;justify-content:center;gap:5px;text-transform:uppercase;}
+.sit-seg button+button{border-left:1px solid var(--c-border);}
+.sit-seg button.on{background:#fff;color:#000;}
+.sit-seg button:not(.on):hover{color:#fff;}
+.sit-seg button .ico{font-size:13px;}
+
+.advice-wrap{width:100%;max-width:300px;position:relative;z-index:1;}
+.advice{border-radius:2px;padding:14px 16px;border-left:2px solid;background:rgba(255,255,255,.03);}
+.advice-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;opacity:.5;margin-bottom:4px;}
+.advice-act{font-size:32px;font-weight:800;line-height:1;margin-bottom:4px;letter-spacing:-.01em;}
+.advice-sub{font-size:11px;opacity:.6;letter-spacing:.02em;}
+
+.acts{display:flex;gap:8px;width:100%;max-width:300px;margin-top:16px;position:relative;z-index:1;}
+.btn-next{flex:1;padding:10px;border-radius:2px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px;text-transform:uppercase;}
+.btn-next:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);}
+.btn-next .ico{font-size:13px;}
+.btn-rst{padding:10px 12px;border-radius:2px;border:1px solid var(--c-border);background:transparent;color:var(--c-faint);font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:.08em;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px;text-transform:uppercase;}
+.btn-rst:hover{border-color:var(--c-red-line);color:rgba(220,80,80,.9);}
+.btn-rst .ico{font-size:13px;}
+
+/* ── Right col odds ─────────────────────────────────────── */
+.res-block{padding:10px 12px;border-radius:2px;border:1px solid var(--c-border2);background:var(--c-panel2);margin-bottom:7px;}
+.res-block:last-child{margin-bottom:0;}
+.obar{display:flex;height:4px;border-radius:0;overflow:hidden;margin-bottom:7px;background:rgba(255,255,255,.05);}
+.ow{background:var(--c-win);}
+.ot{background:var(--c-tie);}
+.ol{background:var(--c-lose);}
+.oleg{display:flex;gap:8px;flex-wrap:wrap;font-size:10px;margin-bottom:6px;letter-spacing:.03em;}
+.dtl-btn{background:transparent;border:1px solid var(--c-border2);color:var(--c-faint);font-size:10px;padding:3px 8px;border-radius:2px;cursor:pointer;font-family:'Google Sans','Inter',sans-serif;font-weight:600;letter-spacing:.06em;transition:all .1s;margin-top:4px;display:inline-flex;align-items:center;gap:3px;}
+.dtl-btn:hover{border-color:var(--c-gold-line);color:var(--c-gold);}
+.dtl-btn .ico{font-size:11px;}
+.dtl-scroll{max-height:180px;overflow-y:auto;margin-top:7px;}
+.dtl-tbl{width:100%;font-size:11px;border-collapse:collapse;}
+.dtl-tbl th{text-align:left;padding:4px 6px;color:var(--c-faint);font-weight:600;font-size:9px;text-transform:uppercase;letter-spacing:.12em;border-bottom:1px solid var(--c-border2);}
+.dtl-tbl th:last-child{text-align:center;}
+.dtl-tbl td{padding:4px 6px;border-bottom:1px solid rgba(255,255,255,.02);}
+.dtl-tbl td:last-child{text-align:center;font-weight:700;}
+
+/* ── Threat badge ───────────────────────────────────────── */
+.threat{display:flex;align-items:flex-start;gap:6px;padding:7px 10px;border-radius:2px;margin-top:7px;}
+.threat .ico{font-size:13px;margin-top:1px;flex-shrink:0;}
+.threat-ttl{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;margin-bottom:2px;}
+.threat-txt{font-size:10px;line-height:1.4;opacity:.75;}
+
+/* ── Rankings footer ────────────────────────────────────── */
+.rank-hd{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:11px 22px;user-select:none;}
+.rank-hd:hover .col-ttl{color:#fff;}
+.rank-chevron{font-size:15px;color:var(--c-faint);transition:transform .18s;}
+.rank-hd.open .rank-chevron{transform:rotate(180deg);}
+.rank-body{padding:0 22px 16px;display:none;}
+.rank-body.open{display:block;}
+.rank-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px;}
+.rank-row{display:flex;align-items:center;gap:7px;padding:6px 8px;border-radius:2px;background:var(--c-panel2);border:1px solid var(--c-border2);}
+.rank-badge-n{width:17px;height:17px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:700;flex-shrink:0;}
+.rank-name{font-size:11px;font-weight:600;color:#fff;flex:1;min-width:0;}
+.rank-combo{font-size:10px;color:var(--c-faint);}
+.tag{font-size:8px;font-weight:700;padding:2px 5px;border-radius:2px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;}
+.tag-r{background:rgba(192,25,46,.2);color:#e07070;}
+.tag-g{background:rgba(212,168,67,.12);color:var(--c-gold);}
+.rank-sec{font-size:9px;font-weight:700;color:var(--c-faint);text-transform:uppercase;letter-spacing:.18em;margin:10px 0 5px;}
+
+/* ── Spot Cheaters page ─────────────────────────────────── */
+.cheat-page{grid-column:1/span 3;grid-row:1;display:flex;flex-direction:column;overflow:hidden;background:var(--c-panel);}
+.cheat-scroll{flex:1;overflow-y:auto;padding:28px 36px;}
+.cheat-section-title{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.22em;color:var(--c-gold);margin-bottom:20px;}
+.cheat-divider{height:1px;background:var(--c-border);margin:28px 0;}
+.cheat-card{display:flex;align-items:flex-start;gap:36px;max-width:860px;}
+.cheat-card-text{flex:1;min-width:0;}
+.cheat-card-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.cheat-card-label.normal{color:var(--c-win);}
+.cheat-card-label.cheating{color:var(--c-lose);}
+.cheat-card-label .ico{font-size:15px;}
+.cheat-card-desc{font-size:13px;color:var(--c-muted);line-height:1.75;}
+.cheat-card-desc em{font-style:normal;color:#fff;font-weight:600;}
+.cheat-gif{width:240px;flex-shrink:0;border-radius:3px;overflow:hidden;border:1px solid var(--c-border);background:var(--c-panel2);}
+.cheat-gif img{width:100%;display:block;}
+.cheat-gif-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;text-align:center;padding:8px 10px;border-top:1px solid var(--c-border);}
+.cheat-gif-label.normal{color:var(--c-win);}
+.cheat-gif-label.cheating{color:var(--c-lose);}
+.cheat-tip{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:2px;background:var(--c-panel2);border:1px solid var(--c-border);margin-top:28px;max-width:720px;}
+.cheat-tip .ico{font-size:18px;flex-shrink:0;margin-top:1px;color:var(--c-gold);}
+.cheat-tip-text{font-size:12px;color:var(--c-muted);line-height:1.65;}
+.cheat-tip-text strong{color:#fff;}
+
+/* ── Mobile ─────────────────────────────────────────────── */
+@media(max-width:900px){
+  html,body{overflow:auto;}
+  .shell{height:auto;}
+  .arena{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;overflow:visible;}
+  .col-l{grid-column:1;grid-row:1;border-right:none;border-bottom:1px solid var(--c-border);}
+  .col-r{grid-column:1;grid-row:2;border-left:none;border-bottom:1px solid var(--c-border);}
+  .col-c{grid-column:1;grid-row:3;padding:20px 16px;}
+  .col-foot{grid-column:1;grid-row:4;}
+  .col,.col-c{overflow:visible;min-height:unset;}
+  .prob-num .n{font-size:80px;}
+  .rank-grid{grid-template-columns:repeat(2,1fr);}
+}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <header class="bar">
+    <div class="bar-brand">
+      <span class="bar-title">DUO/5 Helper</span>
+      <span class="bar-sub">Crimson Desert</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:0;">
+      <div class="mode-tabs">
+        <button class="mode-tab on" id="tab-duo" onclick="setMode('duo')">Duo</button>
+        <button class="mode-tab" id="tab-cinq" onclick="setMode('cinq')">Cinq-Cartes</button>
+        <button class="mode-tab" id="tab-cheat" onclick="setMode('cheat')">Spot Cheaters</button>
+      </div>
+    </div>
+    <div class="bar-right" id="bar-right"></div>
+  </header>
+
+  <div class="arena" id="arena"></div>
+
+</div>
+<script>
+// ── Translations ──────────────────────────────────────────────────────────────
+const LANGS = {
+  en: {
+    myHand:'My Hand', opponent:'Opponent',
+    duoRankings:'DUO — HAND RANKINGS & RULES',
+    fiveRankings:'5-CARD HAND RANKINGS & RULES',
+    c1:'Card 1', c2:'Card 2', red:'Red', yellow:'Yellow',
+    oppCard:'Opponent {n} — Visible Card',
+    promptCards:'Select your two cards to begin',
+    promptOpp:"Select an opponent's card to calculate odds",
+    winVs:'Win rate vs opponent', winVsAll:'Win rate vs all {n} opponents',
+    situation:'Your Situation', first:'First Action', raise:'Facing a Raise',
+    recAction:'Recommended Action',
+    allin:'ALL-IN', dblRaise:'DOUBLE RAISE', halfRaise:'HALF RAISE', check:'CHECK', call:'CALL', fold:'FOLD',
+    s_allin_f:'Dominant hand — maximise value immediately',
+    s_dbl_f:'Clear edge — press your advantage with a full raise',
+    s_half_f:'Slight edge — stay aggressive but measured',
+    s_check:'Unfavourable — pass for free and see what develops',
+    s_allin_r:'Dominant hand — re-raise all-in and force folds',
+    s_dbl_r:'Clear edge — re-raise and put pressure on opponents',
+    s_half_r:'Slight edge — re-raise cautiously to control pot',
+    s_call:'Behind but not hopeless — match and stay in',
+    s_fold:'Too far behind — cut your losses now',
+    next:'Next Tour', reset:'Reset',
+    win:'Win', tie:'Tie', lose:'Lose',
+    vsOpp:'vs Opp {n}', showDtl:'Show Details', hideDtl:'Hide Details',
+    addOpp:'+ Add', remOpp:'− Remove', foldBtn:'Fold', unfold:'Unfold',
+    allFolded:'All opponents folded. You win!',
+    sCol:'Special — Color Dependent', sAny:'Special — Any Color',
+    sRank:'Ranked (strongest → weakest)',
+    nUnbeat:'Unbeatable', nExec:'Beats Superior Pair', nRematch9:'Rematch ≤ 9-Pair', nSup:'Beats Sup. Pair',
+    nAllStd:'Beats all except Sup. Pair', nPairs:'Beats all Pairs ≤9', nRematch2:'Rematch ≤ Un-Deux',
+    nJudgeNote:'Treated as Zéro vs non-pairs', nExecNote:'Treated as 1pt vs non-Sup.',
+    th2:'2nd Card', thHand:'Their Hand', thRes:'Result',
+    tkwHigh:'Kwang Card — High Threat', tkwDtl:'Can form {x}. Play defensively.',
+    tr4High:'Red 4 — High Threat', tr4Dtl:'Enables High Warden, Executor, or Warden. Consider folding weak hands.',
+    t10Med:'10 — Medium Threat', t10Dtl:'Can form Ten Pair. Be cautious with mid-range hands.',
+    t1Med:'1 — Medium Threat', t1Dtl:'Can form One-two, One-four, One-nine, One-ten.',
+    t9Med:'9 — Medium Threat', t9Dtl:'Can form Pair of 9s or Warden (4+9).',
+    tLow:'Low Threat', tLowDtl:'Good opportunity to drag out the round.',
+    selectMissing:'Select {x} to see your hand',
+    selectYours:'Select your two cards',
+    // Duo rules (for footer)
+    duoRulesTitle:'Rules',
+    duoAbout:'Played with 20 numbered cards (1–10), one red and one yellow of each. Form the strongest 2-card hand to win.',
+    duoBets:'Betting Options',
+    duoBet1:'Check — Pass without raising.',
+    duoBet2:'All-In — Bet all your silver.',
+    duoBet3:'Half Pot — Bet half the total pot.',
+    duoBet4:'Raise — Double the previous bet.',
+    duoBet5:'Call — Match the previous bet.',
+    duoBet6:'Fold — Abandon the round.',
+    duoExtra:'If you exceed 10 seconds, Call is auto-selected. Hands are revealed when all bets match or betting can no longer increase. If your silver drops below the buy-in, you cannot participate.',
+    duoSpecialTitle:'Special Hand Rules',
+    duoWarden:'Warden (4+9): Rematch if all players have a hand ≤ Un-Deux.',
+    duoHWarden:'High Warden (R4+R9): Rematch if all players have a hand ≤ Pair of 9.',
+    duoJudge:'Judge (3+7): Beats opponent if their best hand is a Pair (≤9). Otherwise treated as Zéro.',
+    duoExecutor:'Executor (R4+R7): Beats Superior Pair. Cannot beat Prime Pair. Otherwise treated as 1 point.',
+    // Five-Card specific
+    f5hand:'My Hand (5-Card)', f5opp:'Opponent (5-Card)',
+    f5prompt:'Select your 5 cards to begin',
+    f5promptOpp:"Select an opponent's visible card",
+    f5winVs:'Win rate vs opponent', f5winVsAll:'Win rate vs all {n} opponents',
+    f5situation:'Your Situation',
+    // 5-card rules sections
+    r5about:'About Five-Card',
+    r5about1:'Played with 40 sticks: two sets of 1–10, each in Red and Yellow. Red sticks are essential for the strongest hands.',
+    r5about2:'The player who builds the strongest 2-card hand wins the pot.',
+    r5how:'How to Play',
+    r5how1:'Receive 5 sticks and combine 3 to total exactly 10, 20, or 30.',
+    r5how2:'The best 2-card combination from the remaining sticks is your hand.',
+    r5how3:'If no valid 3-stick total exists, your hand is a Bust — automatic loss.',
+    r5bets:'Betting Options',
+    r5b1:'Check — Pass without raising.',
+    r5b2:'All-In — Bet all your silver.',
+    r5b3:'Half — Bet half the total pot.',
+    r5b4:'Raise — Double the previous bet.',
+    r5b5:'Call — Match the previous bet.',
+    r5b6:'Fold — Abandon the round.',
+    r5tips:'Tips to Win',
+    r5t1:'Wild Heart: Even a weak hand can win if you raise boldly — opponents may fold.',
+    r5t2:'Strategic Fold: Cut your losses and prepare for the next round.',
+    r5t3:'Sharp Eyes: Watch for cheating opponents and call them out.',
+    // Spot Cheaters
+    cheatTitle:'Spot Cheaters',
+    cheatSubtitle:'How to catch them in the act',
+    cheatIntro1:'',
+    cheatWhenDealing:'When dealing the cards',
+    cheatNormalLabel:'Normal',
+    cheatNormalDesc:'They hold the bundle of cards with their <em>thumb pointing down</em> and deal naturally from the top.',
+    cheatCheatLabel:'Cheating — Bottom Dealing',
+    cheatCheatDesc:'They grab the bundle from the side with their <em>thumb pointing up</em> to secretly pull a card from the bottom of the deck.',
+    cheatTip:'If you spot it, hold the <strong>Accuse</strong> button. Correct — they\'re removed and their silver is split between players. Wrong — you get temporarily banned from the gambling den for a couple of in-game days. Be sure before you accuse.',
+  },
+  fr: {
+    myHand:'Ma Main', opponent:'Adversaire',
+    duoRankings:'DUO — CLASSEMENT DES MAINS & RÈGLES',
+    fiveRankings:'5-CARTES — MAINS & RÈGLES',
+    c1:'Carte 1', c2:'Carte 2', red:'Rouge', yellow:'Jaune',
+    oppCard:'Adversaire {n} — Carte Visible',
+    promptCards:'Sélectionnez vos cartes pour commencer',
+    promptOpp:"Sélectionnez la carte d'un adversaire pour calculer",
+    winVs:'Taux de victoire vs adversaire', winVsAll:'Taux de victoire vs les {n} adversaires',
+    situation:'Votre Situation', first:'Première Action', raise:'Face à une Relance',
+    recAction:'Action Recommandée',
+    allin:'TAPIS', dblRaise:'RELANCER', halfRaise:'RELANCE DE MOITIÉ', check:'PAROLE', call:'SUIVRE', fold:'SE COUCHER',
+    s_allin_f:'Main dominante — maximiser la valeur immédiatement',
+    s_dbl_f:'Avantage clair — appuyez avec une relance complète',
+    s_half_f:'Léger avantage — restez agressif mais mesuré',
+    s_check:'Cotes défavorables — passez gratuitement et observez',
+    s_allin_r:'Main dominante — relancer tapis et forcer les couchers',
+    s_dbl_r:'Avantage clair — relancer et mettre la pression',
+    s_half_r:'Léger avantage — relancer prudemment pour le pot',
+    s_call:'Derrière mais pas sans espoir — suivez à moindre coût',
+    s_fold:'Trop en retard — coupez vos pertes maintenant',
+    next:'Tour Suivant', reset:'Réinitialiser',
+    win:'Victoire', tie:'Égalité', lose:'Défaite',
+    vsOpp:'vs Adv {n}', showDtl:'Voir Détails', hideDtl:'Masquer',
+    addOpp:'+ Ajouter', remOpp:'− Retirer', foldBtn:'Coucher', unfold:'Reprendre',
+    allFolded:'Tous les adversaires se sont couchés. Vous gagnez !',
+    sCol:'Spéciales — Couleur Obligatoire', sAny:'Spéciales — Toute Couleur',
+    sRank:'Classées (plus forte → plus faible)',
+    nUnbeat:'Imbattable', nExec:'Bat la Paire Supérieure', nRematch9:'Revanche ≤ Paire 9', nSup:'Bat Paire Sup.',
+    nAllStd:'Bat tout sauf Paire Sup.', nPairs:'Bat toutes Paires ≤9', nRematch2:'Revanche ≤ Un-Deux',
+    nJudgeNote:'Traité comme Zéro hors Paires', nExecNote:'Traité comme 1pt hors Paire Sup.',
+    th2:'2e Carte', thHand:'Leur Main', thRes:'Résultat',
+    tkwHigh:'Carte Kwang — Menace Haute', tkwDtl:'Peut former {x}. Jouez défensivement.',
+    tr4High:'Rouge 4 — Menace Haute', tr4Dtl:'Active Garde Haute, Exécuteur ou Garde.',
+    t10Med:'10 — Menace Moyenne', t10Dtl:'Peut former une Paire de 10.',
+    t1Med:'1 — Menace Moyenne', t1Dtl:'Peut former Un-deux, Un-quatre, Un-neuf, Un-dix.',
+    t9Med:'9 — Menace Moyenne', t9Dtl:'Peut former Paire de 9 ou Garde (4+9).',
+    tLow:'Menace Faible', tLowDtl:'Bonne opportunité pour prolonger le tour.',
+    selectMissing:'Sélectionnez {x} pour voir votre main',
+    selectYours:'Sélectionnez vos deux cartes',
+    // Duo rules (for footer)
+    duoRulesTitle:'Règles',
+    duoAbout:'Joué avec 20 cartes numérotées (1–10), une rouge et une jaune de chaque. Formez la combinaison de 2 cartes la plus forte pour gagner.',
+    duoBets:'Options de mise',
+    duoBet1:'Parole — Passer sans augmenter la mise.',
+    duoBet2:'Tapis — Miser l\'intégralité de ses pièces.',
+    duoBet3:'Moitié du pot — Miser la moitié du pot total.',
+    duoBet4:'Relancer — Miser le double de la mise précédente.',
+    duoBet5:'Suivre — Miser la même somme que le précédent.',
+    duoBet6:'Se coucher — Abandonner la manche en cours.',
+    duoExtra:'Si vous dépassez 10 secondes, Suivre est sélectionné automatiquement. Les mains sont révélées quand toutes les mises sont égales ou que les enchères ne peuvent plus augmenter. Si vos pièces passent sous la mise de départ, vous ne pouvez plus participer.',
+    duoSpecialTitle:'Règles des mains spéciales',
+    duoWarden:'Garde (4+9) : Revanche si tous les joueurs ont une main ≤ Un-Deux.',
+    duoHWarden:'Grand Gardien (R4+R9) : Revanche si tous les joueurs ont une main ≤ Paire de 9.',
+    duoJudge:'Juge (3+7) : Bat l\'adversaire si sa meilleure main est une Paire (≤9). Sinon traité comme Zéro.',
+    duoExecutor:'Exécuteur (R4+R7) : Bat la Paire Supérieure. Ne peut battre la Paire Suprême. Sinon traité comme 1 point.',
+    // Five-Card specific
+    f5hand:'Ma Main (Cinq-Cartes)', f5opp:'Adversaire (Cinq-Cartes)',
+    f5prompt:'Sélectionnez vos 5 cartes pour commencer',
+    f5promptOpp:"Sélectionnez la carte visible d'un adversaire",
+    f5winVs:'Taux de victoire vs adversaire', f5winVsAll:'Taux de victoire vs les {n} adversaires',
+    f5situation:'Votre Situation',
+    // 5-card rules sections
+    r5about:'Le Cinq-Cartes',
+    r5about1:'Joué avec 40 bâtons : deux séries de 1 à 10, en Rouge et Jaune. Les bâtons rouges sont essentiels pour les mains les plus fortes.',
+    r5about2:'Le joueur qui forme la meilleure main de 2 cartes remporte le pot.',
+    r5how:'Déroulement',
+    r5how1:'Recevez 5 bâtons et combinez-en 3 pour obtenir exactement 10, 20 ou 30.',
+    r5how2:'La meilleure combinaison des 2 bâtons restants constitue votre main.',
+    r5how3:'Si aucun total valide n\'est possible, c\'est un Échec — défaite automatique.',
+    r5bets:'Options de mise',
+    r5b1:'Parole — Passer sans augmenter la mise.',
+    r5b2:'Tapis — Miser l\'intégralité de ses pièces.',
+    r5b3:'Moitié — Miser la moitié du pot.',
+    r5b4:'Relancer — Miser le double de la mise précédente.',
+    r5b5:'Suivre — Miser la même somme que le précédent.',
+    r5b6:'Se coucher — Abandonner la manche.',
+    r5tips:'Astuces pour gagner',
+    r5t1:'Cœur de fauve : Même une main faible peut gagner si vous osez hausser la mise.',
+    r5t2:'Reculer pour sauter : Coupez vos pertes et préparez la prochaine manche.',
+    r5t3:'Yeux rapides : Surveillez les tricheurs et dénoncez-les.',
+    // Spot Cheaters
+    cheatTitle:'Démasquer les Tricheurs',
+    cheatSubtitle:'Comment les prendre sur le fait',
+    cheatIntro1:'',
+    cheatWhenDealing:'Lors de la distribution',
+    cheatNormalLabel:'Normal',
+    cheatNormalDesc:'Ils tiennent le paquet avec le <em>pouce pointé vers le bas</em> et distribuent naturellement depuis le dessus.',
+    cheatCheatLabel:'Triche — Distribution par le bas',
+    cheatCheatDesc:'Ils saisissent le paquet sur le côté avec le <em>pouce pointé vers le haut</em> pour tirer secrètement une carte depuis le dessous.',
+    cheatTip:'Si vous le surprenez, maintenez le bouton <strong>Démasquer</strong>. Correct — il est éliminé et ses pièces sont partagées. Faux — vous êtes temporairement banni du repaire pour quelques jours en jeu. Soyez sûr avant d\'accuser.',
+  }
+};
+
+// ── Hand name tables ──────────────────────────────────────────────────────────
+const HAND_NAMES = {
+  en: {
+    prime_pair:'Prime Pair', superior_pair:'Superior Pair', high_warden:'High Warden',
+    executor:'Executor', ten_pair:'Ten Pair', warden:'Warden', judge:'Judge',
+    one_two:'One-two', one_four:'One-four', one_nine:'One-nine', one_ten:'One-ten',
+    four_ten:'Four-ten', four_six:'Four-six', perfect_nine:'Perfect Nine', zero:'Zero',
+  },
+  fr: {
+    prime_pair:'Paire Primaire', superior_pair:'Paire Supérieure', high_warden:'Haute Garde',
+    executor:'Exécuteur', ten_pair:'Paire de 10', warden:'Garde', judge:'Juge',
+    one_two:'Un-deux', one_four:'Un-quatre', one_nine:'Un-neuf', one_ten:'Un-dix',
+    four_ten:'Quatre-dix', four_six:'Quatre-six', perfect_nine:'Neuf Parfait', zero:'Zéro',
+  }
+};
+
+// ── App state ─────────────────────────────────────────────────────────────────
+const S = {
+  c1: { n:null, col:null },
+  c2: { n:null, col:null },
+  opps: [{ n:null, col:null, folded:false }],
+  dtl: {},
+  raising: false,
+  showRanks: false,
+  lang: 'en',
+  mode: 'duo', // 'duo' | 'cinq'
+};
+
+// ── Five-Card state (5 card slots) ───────────────────────────────────────────
+const S5 = {
+  cards: [
+    {n:null,col:null},{n:null,col:null},{n:null,col:null},
+    {n:null,col:null},{n:null,col:null}
+  ],
+  opps: [{ n:null, col:null, folded:false }],
+  dtl: {},
+  raising: false,
+  showRanks5: false,
+};
+
+// ── Game constants ────────────────────────────────────────────────────────────
+const RK = { PP:100, SP:90, TP:80, PB:70, OT:60, OF:59, ON:58, OTn:57, FT:56, FS:55, P9:50, ZERO:0, NINE_PAIR:79 };
+const TOP = ['prime_pair','superior_pair','ten_pair'];
+const DECK = [];
+for (let i=1;i<=10;i++) { DECK.push({n:i,col:'red'}); DECK.push({n:i,col:'yellow'}); }
+
+// ── Hand evaluation ───────────────────────────────────────────────────────────
+function evalHand(a, b) {
+  const lo = Math.min(a.n, b.n), hi = Math.max(a.n, b.n);
+  const both = a.col==='red' && b.col==='red';
+  const sum  = (a.n + b.n) % 10;
+  if (lo===3&&hi===8&&both)             return { t:'prime_pair',    r:RK.PP,  num:null, sum, fb:sum };
+  if (lo===1&&(hi===3||hi===8)&&both)   return { t:'superior_pair', r:RK.SP,  num:null, sum, fb:sum };
+  if (lo===4&&hi===9&&both)             return { t:'high_warden',   r:-1,     num:null, sum, fb:3   };
+  if (lo===4&&hi===7&&both)             return { t:'executor',      r:-1,     num:null, sum, fb:1   };
+  if (lo===10&&hi===10)                 return { t:'ten_pair',      r:RK.TP,  num:null, sum, fb:sum };
+  if (lo===4&&hi===9)                   return { t:'warden',        r:-1,     num:null, sum, fb:3   };
+  if (lo===3&&hi===7)                   return { t:'judge',         r:-1,     num:null, sum, fb:sum };
+  if (lo===hi)                          return { t:'pair',          r:RK.PB+lo, num:lo, sum, fb:sum };
+  if (lo===1&&hi===2)                   return { t:'one_two',       r:RK.OT,  num:null, sum, fb:sum };
+  if (lo===1&&hi===4)                   return { t:'one_four',      r:RK.OF,  num:null, sum, fb:sum };
+  if (lo===1&&hi===9)                   return { t:'one_nine',      r:RK.ON,  num:null, sum, fb:sum };
+  if (lo===1&&hi===10)                  return { t:'one_ten',       r:RK.OTn, num:null, sum, fb:sum };
+  if (lo===4&&hi===10)                  return { t:'four_ten',      r:RK.FT,  num:null, sum, fb:sum };
+  if (lo===4&&hi===6)                   return { t:'four_six',      r:RK.FS,  num:null, sum, fb:sum };
+  if (sum===9)                          return { t:'perfect_nine',  r:RK.P9,  num:null, sum, fb:9   };
+  if (sum===0)                          return { t:'zero',          r:RK.ZERO,num:null, sum, fb:0   };
+  return                                       { t:'points',        r:sum,    num:null, sum, fb:sum };
+}
+
+// ── Five-Card hand resolution ─────────────────────────────────────────────────
+// Finds all 3-card combos summing to 10/20/30, returns best 2-card hand from remainder
+function evalFiveCardHand(cards) {
+  const filled = cards.filter(c => c.n && c.col);
+  if (filled.length < 5) return null; // need all 5
+
+  let bestHand = null;
+  let bestRank = -Infinity;
+  let bestCombo3 = null; // the 3 cards used for base
+  let isBust = true;
+
+  // Try all combinations of 3 cards from the 5
+  for (let i=0;i<5;i++) for (let j=i+1;j<5;j++) for (let k=j+1;k<5;k++) {
+    const sum3 = filled[i].n + filled[j].n + filled[k].n;
+    if (sum3 === 10 || sum3 === 20 || sum3 === 30) {
+      isBust = false;
+      // The remaining 2 cards form the hand
+      const rem = filled.filter((_,idx) => idx!==i && idx!==j && idx!==k);
+      const h = evalHand(rem[0], rem[1]);
+      // Pick the best possible 2-card hand
+      const rank = h.r >= 0 ? h.r : (h.t==='executor'?85:h.t==='high_warden'?75:h.t==='warden'?40:h.t==='judge'?0:0);
+      if (rank > bestRank) {
+        bestRank = rank;
+        bestHand = h;
+        bestCombo3 = [filled[i],filled[j],filled[k]];
+      }
+    }
+  }
+
+  if (isBust) return { bust: true };
+  return { hand: bestHand, base: bestCombo3, bust: false };
+}
+
+function handName(h) {
+  const tbl = HAND_NAMES[S.lang];
+  if (h.t === 'pair')   return (S.lang==='fr' ? 'Paire de '+h.num : 'Pair of '+h.num+'s');
+  if (h.t === 'points') return h.sum + (S.lang==='fr' ? ' Points' : ' Points');
+  return tbl[h.t] || h.t;
+}
+
+// ── Hand comparison ───────────────────────────────────────────────────────────
+// Based on official in-game rules (screenshots):
+// - Warden (4+9 any): rematch if ALL players ≤ Un-Deux (one_two). Loses to everything above.
+// - High Warden (R4+R9): rematch if ALL players ≤ Pair of 9. Loses to 9-pair and above.
+// - Judge (3+7): beats Pairs ≤9. Treated as Zéro (r=0) against everything else.
+// - Executor (R4+R7): beats Superior Pair. Cannot beat Prime Pair. Else treated as 1 point.
+function ord(a, b) { return a>b ? 'win' : a<b ? 'lose' : 'tie'; }
+
+// Named hands above one_two (warden rematch threshold) in rank order:
+const ABOVE_ONE_TWO = new Set(['one_four','one_nine','one_ten','four_ten','four_six','perfect_nine']);
+
+function cmp(my, op) {
+
+  // ── Judge (3+7) ──────────────────────────────────────────
+  // Beats pairs ≤9. Treated as Zéro against everything else.
+  if (my.t==='judge') {
+    if (TOP.includes(op.t))                                           return 'lose';
+    if (op.t==='pair')                                                return 'win';
+    if (op.t==='judge')                                               return 'tie';
+    if (op.t==='warden'||op.t==='high_warden'||op.t==='executor')    return 'tie';
+    // Treated as Zéro: loses to points>0, ties with zero
+    if (op.t==='zero')                                                return 'tie';
+    if (op.t==='points') return ord(0, op.r); // zero(0) vs points
+    return 'lose'; // loses to all named hands (one_two+)
+  }
+  if (op.t==='judge') {
+    if (TOP.includes(my.t))                                           return 'win';
+    if (my.t==='pair')                                                return 'lose';
+    if (my.t==='warden'||my.t==='high_warden'||my.t==='executor')    return 'tie';
+    if (my.t==='zero')                                                return 'tie';
+    if (my.t==='points') return ord(my.r, 0);
+    return 'win'; // named hands (one_two+) beat judge-as-zero
+  }
+
+  // ── Executor (R4+R7) ─────────────────────────────────────
+  // Beats Superior Pair. Cannot beat Prime Pair. Else treated as 1 point.
+  if (my.t==='executor') {
+    if (op.t==='prime_pair')                                          return 'lose';
+    if (op.t==='superior_pair')                                       return 'win';
+    if (op.t==='executor')                                            return 'tie';
+    if (op.t==='high_warden'||op.t==='warden')                       return 'tie';
+    return ord(1, op.r); // treated as 1 point
+  }
+  if (op.t==='executor') {
+    if (my.t==='prime_pair')                                          return 'win';
+    if (my.t==='superior_pair')                                       return 'lose';
+    if (my.t==='warden'||my.t==='high_warden')                       return 'tie';
+    return ord(my.r, 1);
+  }
+
+  // ── High Warden (R4+R9) ──────────────────────────────────
+  // Rematch if ALL players ≤ Pair of 9. Loses to Pair of 9 and above.
+  if (my.t==='high_warden') {
+    if (TOP.includes(op.t))                                           return 'lose';
+    if (op.t==='pair' && op.r >= RK.NINE_PAIR)                       return 'lose'; // 9-pair and above
+    return 'tie'; // rematch: everything ≤ 8-pair, named hands, points, zero
+  }
+  if (op.t==='high_warden') {
+    if (TOP.includes(my.t))                                           return 'win';
+    if (my.t==='pair' && my.r >= RK.NINE_PAIR)                       return 'win';
+    return 'tie';
+  }
+
+  // ── Warden (4+9 any) ─────────────────────────────────────
+  // Rematch if ALL players ≤ Un-Deux. one_two = threshold (rematch).
+  // Loses to: TOP hands, any pair, any named hand above one_two.
+  // Ties (rematch): one_two, points, zero.
+  if (my.t==='warden') {
+    if (TOP.includes(op.t))                                           return 'lose';
+    if (op.t==='pair')                                                return 'lose';
+    if (ABOVE_ONE_TWO.has(op.t))                                      return 'lose'; // above one_two
+    return 'tie'; // one_two, points, zero → rematch
+  }
+  if (op.t==='warden') {
+    if (TOP.includes(my.t))                                           return 'win';
+    if (my.t==='pair')                                                return 'win';
+    if (ABOVE_ONE_TWO.has(my.t))                                      return 'win';
+    return 'tie';
+  }
+
+  // ── Standard comparison ───────────────────────────────────
+  return ord(my.r, op.r);
+}
+
+// ── Odds engine ───────────────────────────────────────────────────────────────
+let cache = {};
+function bustCache() { cache = {}; }
+
+function available(exclude) {
+  const used = [];
+  if (S.c1.n&&S.c1.col) used.push(S.c1);
+  if (S.c2.n&&S.c2.col) used.push(S.c2);
+  // All opponents' cards are out of the deck (including the exclude opp's own visible card)
+  S.opps.forEach(o => { if (o.n&&o.col) used.push(o); });
+  return DECK.filter(c => !used.some(u => u.n===c.n && u.col===c.col));
+}
+
+function computeOdds(myH, visOpps) {
+  const k = myH.t+':'+myH.r+'|'+visOpps.map(o=>o.n+o.col).join(',');
+  if (cache[k]) return cache[k];
+
+  const perOpp = visOpps.map(opp => {
+    let w=0,l=0,ti=0; const dtl=[];
+    available(opp).forEach(unk => {
+      const oh = evalHand(opp, unk);
+      const res = cmp(myH, oh);
+      if (res==='win') w++; else if (res==='lose') l++; else ti++;
+      dtl.push({ card:unk, oh, res });
+    });
+    const tot = available(opp).length;
+    return { w,l,ti,tot,dtl };
+  });
+
+  let combo = null;
+  if (visOpps.length >= 2) {
+    const pools = visOpps.map(o => available(o));
+    let cw=0,cl=0,ct=0;
+    (function rec(i, res) {
+      if (i===visOpps.length) {
+        if (res.every(r=>r==='win')) cw++;
+        else if (res.some(r=>r==='lose')) cl++;
+        else ct++;
+        return;
+      }
+      pools[i].forEach(unk => {
+        res.push(cmp(myH, evalHand(visOpps[i], unk)));
+        rec(i+1, res);
+        res.pop();
+      });
+    })(0, []);
+    const tot = pools.reduce((a,p)=>a*p.length, 1);
+    combo = { w:cw, l:cl, ti:ct, tot };
+  }
+
+  cache[k] = { perOpp, combo };
+  return cache[k];
+}
+
+// ── Duplicate detection ───────────────────────────────────────────────────────
+function isTaken(num, col, key) {
+  const all = [
+    {k:'c1',card:S.c1},{k:'c2',card:S.c2},
+    ...S.opps.map((o,i)=>({k:'o'+i,card:o}))
+  ];
+  return all.some(x => x.k!==key && x.card.n===num && x.card.col===col);
+}
+
+function isTaken5(num, col, key) {
+  const all = [
+    ...S5.cards.map((c,i) => ({k:'c'+i, card:c})),
+    ...S5.opps.map((o,i) => ({k:'o'+i, card:o}))
+  ];
+  return all.some(x => x.k!==key && x.card.n===num && x.card.col===col);
+}
+
+function available5(exclude) {
+  const used = [];
+  S5.cards.forEach(c => { if (c.n&&c.col) used.push(c); });
+  // All opponents' cards excluded (including the exclude opp's own visible card)
+  S5.opps.forEach(o => { if (o.n&&o.col) used.push(o); });
+  return DECK.filter(c => !used.some(u => u.n===c.n && u.col===c.col));
+}
+
+function computeOdds5(myH, visOpps) {
+  const k5 = '5:'+myH.t+':'+myH.r+'|'+visOpps.map(o=>o.n+o.col).join(',');
+  if (cache[k5]) return cache[k5];
+  const perOpp = visOpps.map(opp => {
+    let w=0,l=0,ti=0; const dtl=[];
+    available5(opp).forEach(unk => {
+      const oh = evalHand(opp, unk);
+      const res = cmp(myH, oh);
+      if (res==='win') w++; else if (res==='lose') l++; else ti++;
+      dtl.push({ card:unk, oh, res });
+    });
+    return { w,l,ti,tot:available5(opp).length,dtl };
+  });
+  let combo = null;
+  if (visOpps.length >= 2) {
+    const pools = visOpps.map(o => available5(o));
+    let cw=0,cl=0,ct=0;
+    (function rec(i,res){
+      if(i===visOpps.length){if(res.every(r=>r==='win'))cw++;else if(res.some(r=>r==='lose'))cl++;else ct++;return;}
+      pools[i].forEach(unk=>{res.push(cmp(myH,evalHand(visOpps[i],unk)));rec(i+1,res);res.pop();});
+    })(0,[]);
+    combo={w:cw,l:cl,ti:ct,tot:pools.reduce((a,p)=>a*p.length,1)};
+  }
+  cache[k5]={perOpp,combo};return cache[k5];
+}
+
+// ── i18n helper ───────────────────────────────────────────────────────────────
+function tx(key, ...subs) {
+  let s = LANGS[S.lang][key] || LANGS.en[key] || key;
+  subs.forEach(v => { s = s.replace(/\{[^}]+\}/, v); });
+  return s;
+}
+
+// ── Result colors ─────────────────────────────────────────────────────────────
+function rCol(r) { return r==='win'?'var(--c-win)':r==='lose'?'var(--c-lose)':'var(--c-tie)'; }
+function rIco(r) { return r==='win'?'✓':r==='lose'?'✗':'='; }
+
+// ── Card chip (V2 — with card image background) ───────────────────────────────
+function chip(c, lbl) {
+  const ok=c.n&&c.col, isR=c.col==='red';
+  const colCls = ok&&isR?' r':ok?' y':'';
+  const nc = ok?(isR?'#e07070':'#d4b84a'):'var(--c-faint)';
+  const pfx = isR?'R':(S.lang==='fr'?'J':'Y');
+  if (ok) {
+    // Card image: Images/Cards/R1.png … R10.png / Y1.png … Y10.png
+    const imgKey = (isR?'R':'Y') + c.n;
+    const imgUrl = `Images/Cards/${imgKey}.png`;
+    return `<div class="chip${colCls} filled" style="--card-img:url('${imgUrl}')">
+      <span class="chip-corner">${pfx}</span>
+      <span class="chip-n" style="color:${nc}">${c.n}</span>
+      <span class="chip-c" style="color:${nc}">${tx(isR?'red':'yellow')}</span>
+    </div>`;
+  }
+  return `<div class="chip"><span class="chip-e">${lbl}</span></div>`;
+}
+
+// ── Card selector (Duo hand + all opponents) ──────────────────────────────────
+function selector(c, key, lbl, isOpp, idx) {
+  const filled = c.n && c.col;
+  const isR = c.col === 'red';
+  const pfx = isR ? 'R' : (S.lang==='fr'?'J':'Y');
+  const numCls = filled ? (isR ? 'done-r' : 'done-y') : '';
+  const panelCls = filled ? (isR ? 'filled-r' : 'filled-y') : '';
+  const valLabel = filled ? `<span class="cslot5-val">${pfx}${c.n}</span>` : '';
+
+  // Slot number: c1→1, c2→2, o0→1, o1→2, o2→3
+  const slotNum = key==='c1'?1 : key==='c2'?2 : (parseInt(key.slice(1))+1);
+
+  let foldBtn = '';
+  if (isOpp) {
+    const isFolded = c.folded;
+    const fTxt = isFolded ? tx('unfold') : tx('foldBtn');
+    foldBtn = `<button class="fold-btn${isFolded?' folded':''}" onclick="toggleFold(${idx})"><span class="ico">${isFolded?'undo':'block'}</span>${fTxt}</button>`;
+  }
+
+  let h = `<div class="cslot5 ${panelCls}">
+    <div class="cslot5-hd">
+      <span class="cslot5-num ${numCls}">${slotNum}</span>
+      <span class="cslot5-lbl">${lbl}</span>
+      ${valLabel}
+      ${foldBtn}
+    </div>
+    <div style="${(isOpp&&c.folded)?'opacity:0.4;pointer-events:none;':''}">`;
+
+  // Red row
+  h += `<div class="card-row">`;
+  for (let i=1;i<=10;i++) {
+    const on = c.n===i && c.col==='red';
+    const taken = !on && isTaken(i,'red',key);
+    h += `<button class="crb r${on?' sel':''}${taken?' taken':''}" ${taken?'':`onclick="pickCard('${key}',${i},'red')"`}>${i}</button>`;
+  }
+  h += `</div>`;
+  // Yellow row
+  h += `<div class="card-row">`;
+  for (let i=1;i<=10;i++) {
+    const on = c.n===i && c.col==='yellow';
+    const taken = !on && isTaken(i,'yellow',key);
+    h += `<button class="crb y${on?' sel':''}${taken?' taken':''}" ${taken?'':`onclick="pickCard('${key}',${i},'yellow')"`}>${i}</button>`;
+  }
+  h += `</div></div></div>`;
+  return h;
+}
+
+// ── Five-Card selector ────────────────────────────────────────────────────────
+function selector5(c, key, lbl, isOpp, idx) {
+  // ── Opponent slots: same panel layout ──
+  if (isOpp) {
+    const filled = c.n && c.col;
+    const isR = c.col === 'red';
+    const pfx = isR ? 'R' : (S.lang==='fr'?'J':'Y');
+    const numCls = filled ? (isR ? 'done-r' : 'done-y') : '';
+    const panelCls = filled ? (isR ? 'filled-r' : 'filled-y') : '';
+    const valLabel = filled ? `<span class="cslot5-val">${pfx}${c.n}</span>` : '';
+    const slotNum = idx + 1;
+    const isFolded = c.folded;
+    const fTxt = isFolded ? tx('unfold') : tx('foldBtn');
+    const foldBtn = `<button class="fold-btn${isFolded?' folded':''}" onclick="toggleFold5(${idx})"><span class="ico">${isFolded?'undo':'block'}</span>${fTxt}</button>`;
+
+    let h = `<div class="cslot5 ${panelCls}">
+      <div class="cslot5-hd">
+        <span class="cslot5-num ${numCls}">${slotNum}</span>
+        <span class="cslot5-lbl">${lbl}</span>
+        ${valLabel}
+        ${foldBtn}
+      </div>
+      <div style="${isFolded?'opacity:0.4;pointer-events:none;':''}">`;
+    h += `<div class="card-row">`;
+    for (let i=1;i<=10;i++) {
+      const on = c.n===i && c.col==='red';
+      const taken = !on && isTaken5(i,'red',key);
+      h += `<button class="crb r${on?' sel':''}${taken?' taken':''}" ${taken?'':`onclick="pickCard5('${key}',${i},'red')"`}>${i}</button>`;
+    }
+    h += `</div><div class="card-row">`;
+    for (let i=1;i<=10;i++) {
+      const on = c.n===i && c.col==='yellow';
+      const taken = !on && isTaken5(i,'yellow',key);
+      h += `<button class="crb y${on?' sel':''}${taken?' taken':''}" ${taken?'':`onclick="pickCard5('${key}',${i},'yellow')"`}>${i}</button>`;
+    }
+    h += `</div></div></div>`;
+    return h;
+  }
+
+  // ── My Hand slots: distinct bordered panel per card ──
+  const filled = c.n && c.col;
+  const isR = c.col === 'red';
+  const slotNum = parseInt(key.slice(1)) + 1; // c0→1, c1→2 …
+  const numCls = filled ? (isR ? 'done-r' : 'done-y') : '';
+  const panelCls = filled ? (isR ? 'filled-r' : 'filled-y') : '';
+  const pfx = isR ? 'R' : (S.lang==='fr'?'J':'Y');
+  const valLabel = filled ? `<span class="cslot5-val">${pfx}${c.n}</span>` : '';
+
+  let h = `<div class="cslot5 ${panelCls}">
+    <div class="cslot5-hd">
+      <span class="cslot5-num ${numCls}">${slotNum}</span>
+      <span class="cslot5-lbl">${lbl}</span>
+      ${valLabel}
+    </div>`;
+  h += `<div class="card-row">`;
+  for (let i=1;i<=10;i++) {
+    const on = c.n===i && c.col==='red';
+    const taken = !on && isTaken5(i,'red',key);
+    h += `<button class="crb r${on?' sel':''}${taken?' taken':''}" ${taken?'':`onclick="pickCard5('${key}',${i},'red')"`}>${i}</button>`;
+  }
+  h += `</div><div class="card-row">`;
+  for (let i=1;i<=10;i++) {
+    const on = c.n===i && c.col==='yellow';
+    const taken = !on && isTaken5(i,'yellow',key);
+    h += `<button class="crb y${on?' sel':''}${taken?' taken':''}" ${taken?'':`onclick="pickCard5('${key}',${i},'yellow')"`}>${i}</button>`;
+  }
+  h += `</div></div>`;
+  return h;
+}
+
+// ── Five-Card chip ────────────────────────────────────────────────────────────
+function chip5(c, lbl) {
+  const ok=c.n&&c.col, isR=c.col==='red';
+  const colCls = ok&&isR?' r':ok?' y':'';
+  const nc = ok?(isR?'#e07070':'#d4b84a'):'var(--c-faint)';
+  const pfx = isR?'R':(S.lang==='fr'?'J':'Y');
+  if (ok) {
+    const imgUrl = `Images/Cards/${isR?'R':'Y'}${c.n}.png`;
+    return `<div class="chip${colCls} filled" style="--card-img:url('${imgUrl}')">
+      <span class="chip-corner">${pfx}</span>
+      <span class="chip-n" style="color:${nc}">${c.n}</span>
+      <span class="chip-c" style="color:${nc}">${tx(isR?'red':'yellow')}</span>
+    </div>`;
+  }
+  return `<div class="chip"><span class="chip-e">${lbl}</span></div>`;
+}
+
+// ── Odds bar ──────────────────────────────────────────────────────────────────
+function obar(w,l,ti,tot) {
+  if (!tot) return '';
+  const wp=pct(w,tot), lp=pct(l,tot), tp=pct(ti,tot);
+  return `<div class="obar">
+    ${w>0?`<div class="ow" style="width:${wp}%"></div>`:''}
+    ${ti>0?`<div class="ot" style="width:${tp}%"></div>`:''}
+    ${l>0?`<div class="ol" style="width:${lp}%"></div>`:''}
+  </div>
+  <div class="oleg">
+    <span style="color:var(--c-win)">${tx('win')} ${wp}%</span>
+    <span style="color:var(--c-tie)">${tx('tie')} ${tp}%</span>
+    <span style="color:var(--c-lose)">${tx('lose')} ${lp}%</span>
+  </div>`;
+}
+
+// ── Stacked bar (center) ──────────────────────────────────────────────────────
+function sbar(w,l,ti,tot) {
+  if (!tot) return '';
+  const wp=pct(w,tot), lp=pct(l,tot), tp=pct(ti,tot);
+  return `<div class="sbar">
+    ${w>0?`<div class="sw" style="width:${wp}%"></div>`:''}
+    ${ti>0?`<div class="st" style="width:${tp}%"></div>`:''}
+    ${l>0?`<div class="sl" style="width:${lp}%"></div>`:''}
+  </div>
+  <div class="sleg">
+    <span style="color:var(--c-win)">${tx('win')} ${wp}%</span>
+    <span style="color:var(--c-tie)">${tx('tie')} ${tp}%</span>
+    <span style="color:var(--c-lose)">${tx('lose')} ${lp}%</span>
+  </div>`;
+}
+
+function pct(v, t) { return ((v/t)*100).toFixed(1); }
+
+// ── Advice ────────────────────────────────────────────────────────────────────
+function advice(w, l, tot, raising) {
+  if (!tot) return '';
+  const wr=w/tot, lr=l/tot;
+  let act, sub, col;
+  if (!raising) {
+    if      (wr>=0.70) { act=tx('allin');    sub=tx('s_allin_f'); col='#4ade80'; }
+    else if (wr>=0.55) { act=tx('dblRaise'); sub=tx('s_dbl_f');   col='#a8d44a'; }
+    else if (wr>=0.45) { act=tx('halfRaise');sub=tx('s_half_f');  col='#e9c176'; }
+    else               { act=tx('check');    sub=tx('s_check');   col='#d4a04a'; }
+  } else {
+    if      (wr>=0.70) { act=tx('allin');    sub=tx('s_allin_r'); col='#4ade80'; }
+    else if (wr>=0.55) { act=tx('dblRaise'); sub=tx('s_dbl_r');   col='#a8d44a'; }
+    else if (wr>=0.45) { act=tx('halfRaise');sub=tx('s_half_r');  col='#e9c176'; }
+    else if (lr<0.80)  { act=tx('call');     sub=tx('s_call');    col='#e8934a'; }
+    else               { act=tx('fold');     sub=tx('s_fold');    col='#f87171'; }
+  }
+  return `<div class="advice" style="border-left-color:${col};background:${col}0d">
+    <div class="advice-tag" style="color:${col}">${tx('recAction')}</div>
+    <div class="advice-act" style="color:${col}">${act}</div>
+    <div class="advice-sub" style="color:${col}">${sub}</div>
+  </div>`;
+}
+
+// ── Threat badge ──────────────────────────────────────────────────────────────
+function threat(c) {
+  if (!c.n||!c.col) return '';
+  const isR=c.col==='red', n=c.n;
+  let lbl,dtl,col,ico;
+  if (isR&&(n===1||n===3||n===8)) {
+    const combos=[]; if(n===3||n===8){combos.push('Prime Pair','Superior Pair');}else combos.push('Superior Pair');
+    lbl=tx('tkwHigh'); dtl=tx('tkwDtl',combos.join(' / ')); col='#f87171'; ico='warning';
+  } else if (isR&&n===4) {
+    lbl=tx('tr4High'); dtl=tx('tr4Dtl'); col='#f87171'; ico='warning';
+  } else if (n===10) {
+    lbl=tx('t10Med'); dtl=tx('t10Dtl'); col='#e9c176'; ico='info';
+  } else if (n===1) {
+    lbl=tx('t1Med'); dtl=tx('t1Dtl'); col='#e9c176'; ico='info';
+  } else if (n===9) {
+    lbl=tx('t9Med'); dtl=tx('t9Dtl'); col='#e9c176'; ico='info';
+  } else {
+    lbl=tx('tLow'); dtl=tx('tLowDtl'); col='#4ade80'; ico='check_circle';
+  }
+  return `<div class="threat" style="background:${col}0d;border:1px solid ${col}25">
+    <span class="ico" style="color:${col}">${ico}</span>
+    <div><div class="threat-ttl" style="color:${col}">${lbl}</div><div class="threat-txt" style="color:${col}99">${dtl}</div></div>
+  </div>`;
+}
+
+// ── Rankings footer (Duo or Five-Card) ────────────────────────────────────────
+function rankings() {
+  const open = S.mode==='cinq' ? S5.showRanks5 : S.showRanks;
+  const isDuo = S.mode!=='cinq';
+  const title = S.mode==='cinq' ? tx('fiveRankings') : tx('duoRankings');
+  const toggleFn = S.mode==='cinq' ? 'toggleRanks5()' : 'toggleRanks()';
+  const n = k => HAND_NAMES[S.lang][k]||k;
+  const fr = S.lang==='fr';
+  const row = (num,name,combo,tag,tagCls) =>
+    `<div class="rank-row"><div class="rank-badge-n" style="background:${tagCls==='tag-r'?'rgba(154,3,30,.2)':tagCls==='tag-g'?'rgba(233,193,118,.15)':'rgba(255,255,255,.06)'};color:${tagCls==='tag-r'?'#e07070':tagCls==='tag-g'?'var(--c-gold)':'var(--c-faint)'}">${num}</div><div style="flex:1;min-width:0"><div class="rank-name">${name}</div><div class="rank-combo">${combo}</div></div>${tag?`<span class="tag ${tagCls}">${tag}</span>`:''}</div>`;
+
+  let body = '';
+  if (isDuo) {
+    const bullet = (lbl, txt) => `<div style="display:flex;gap:6px;margin-bottom:5px"><span style="color:var(--c-gold);font-weight:600;flex-shrink:0">${lbl}</span><span style="color:var(--c-muted);font-size:11px;line-height:1.5">${txt}</span></div>`;
+    // Duo hand rankings
+    body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div>
+      <div class="rank-sec">${tx('sCol')}</div>
+      <div class="rank-grid" style="grid-template-columns:1fr 1fr">
+        ${row('S',n('prime_pair'),'R3+R8',tx('nUnbeat'),'tag-r')}
+        ${row('S',n('superior_pair'),'R1+R3 / R1+R8',fr?'2e plus forte':'2nd strongest','tag-r')}
+        ${row('S',n('high_warden'),'R4+R9',tx('nRematch9'),'tag-r')}
+        ${row('S',n('executor'),'R4+R7',tx('nExec'),'tag-r')}
+      </div>
+      <div class="rank-sec">${tx('sAny')}</div>
+      <div class="rank-grid" style="grid-template-columns:1fr 1fr">
+        ${row('S',n('ten_pair'),'10+10',tx('nAllStd'),'tag-g')}
+        ${row('S',n('judge'),'3+7',tx('nPairs'),'tag-g')}
+        ${row('S',n('warden'),'4+9',tx('nRematch2'),'tag-g')}
+      </div>
+      <div class="rank-sec">${tx('sRank')}</div>
+      <div class="rank-grid" style="grid-template-columns:1fr 1fr">
+        ${row('1',n('ten_pair'),'10+10','','')}
+        ${row('2',fr?'Paires 9→1':'Pairs 9→1',fr?'Plus haute gagne':'Higher wins','','')}
+        ${row('3',n('one_two'),'1+2','','')}
+        ${row('4',n('one_four'),'1+4','','')}
+        ${row('5',n('one_nine'),'1+9','','')}
+        ${row('6',n('one_ten'),'1+10','','')}
+        ${row('7',n('four_ten'),'4+10','','')}
+        ${row('8',n('four_six'),'4+6','','')}
+        ${row('9',n('perfect_nine'),fr?'Somme finit en 9':'Sum ends 9','','')}
+        ${row('10',fr?'Points 8→1':'Points 8→1',fr?'Dernier chiffre':'Last digit','','')}
+        ${row('11',n('zero'),fr?'Somme finit en 0':'Sum ends 0','','')}
+      </div>
+    </div>
+    <div>
+      <div class="rank-sec" style="margin-top:0">${tx('duoRulesTitle')}</div>
+      <p style="font-size:11px;color:var(--c-muted);line-height:1.6;margin-bottom:10px">${tx('duoAbout')}</p>
+      <div style="font-size:9px;font-weight:700;color:var(--c-gold);text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px">${tx('duoBets')}</div>
+      ${[tx('duoBet1'),tx('duoBet2'),tx('duoBet3'),tx('duoBet4'),tx('duoBet5'),tx('duoBet6')].map(s=>bullet('•',s)).join('')}
+      <p style="font-size:10px;color:var(--c-muted);line-height:1.5;margin-top:8px;margin-bottom:10px">${tx('duoExtra')}</p>
+      <div style="font-size:9px;font-weight:700;color:var(--c-gold);text-transform:uppercase;letter-spacing:.14em;margin-bottom:6px">${tx('duoSpecialTitle')}</div>
+      ${[tx('duoWarden'),tx('duoHWarden'),tx('duoJudge'),tx('duoExecutor')].map(s=>bullet('→',s)).join('')}
+    </div>
+    </div>`;
+  } else {
+    // Five-Card: hand rankings + rules side by side
+    const rowDesc = (rank,name,combo,desc,cls) => `<div class="rank-row" style="flex-direction:column;align-items:flex-start;gap:3px;padding:7px 9px">
+      <div style="display:flex;align-items:center;gap:7px;width:100%">
+        <div class="rank-badge-n" style="background:${cls==='tag-r'?'rgba(154,3,30,.25)':cls==='tag-g'?'rgba(233,193,118,.15)':'rgba(255,255,255,.06)'};color:${cls==='tag-r'?'#e07070':cls==='tag-g'?'var(--c-gold)':'var(--c-faint)'}">${rank}</div>
+        <div style="flex:1"><div class="rank-name" style="font-size:11px">${name}</div><div class="rank-combo">${combo}</div></div>
+        ${cls?`<span class="tag ${cls}" style="font-size:8px">${cls==='tag-r'?(fr?'Couleur':'Color'):(fr?'Spéciale':'Special')}</span>`:''}
+      </div>
+      ${desc?`<div style="font-size:10px;color:var(--c-muted);line-height:1.4;padding-left:25px">${desc}</div>`:''}
+    </div>`;
+
+    const bullet = (lbl,txt) => `<div style="display:flex;gap:6px;margin-bottom:5px"><span style="font-size:11px;font-weight:600;color:var(--c-gold);flex-shrink:0">${lbl}</span><span style="font-size:11px;color:var(--c-muted);line-height:1.5">${txt}</span></div>`;
+    const sec = (t,c) => `<div style="margin-bottom:14px"><div style="font-size:9px;font-weight:700;color:var(--c-gold);text-transform:uppercase;letter-spacing:.14em;margin-bottom:7px;padding-bottom:4px;border-bottom:1px solid var(--c-border)">${t}</div>${c}</div>`;
+
+    body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+      <div>
+        ${sec(fr?'Spéciales — Rouge Requis':'Special — Red Required',
+          rowDesc('S',n('prime_pair'),'R3 + R8', fr?'Victoire garantie. Aucune exception.':'Guaranteed win. No exceptions.','tag-r')+
+          rowDesc('S',n('superior_pair'),'R1 + R3 / R1 + R8', fr?'Un 1 rouge avec un 3 ou 8 rouge.':'Red 1 + red 3 or red 8.','tag-r')+
+          rowDesc('S',n('high_warden'),'R4 + R9', fr?'Revanche contre les mains sous Paire 9.':'Rematch against hands below 9-Pair.','tag-r')+
+          rowDesc('S',n('executor'),'R4 + R7', fr?'Bat la Paire Supérieure.':'Beats Superior Pair.','tag-r')
+        )}
+        ${sec(fr?'Spéciales — Toute Couleur':'Special — Any Color',
+          rowDesc('S',n('judge'),'3 + 7', fr?'Bat toutes les Paires (1 à 9).':'Beats all Pairs (1 to 9).','tag-g')+
+          rowDesc('S',n('warden'),'4 + 9', fr?'Revanche contre les mains sous Un-deux.':'Rematch against hands below One-two.','tag-g')
+        )}
+        ${sec(fr?'Combinaisons Standard':'Standard Combinations',
+          rowDesc('1',n('ten_pair'),'10 + 10', fr?'Bat tout sauf Paire Supérieure.':'Beats all except Superior Pair.','')+
+          rowDesc('2',fr?'Paires 9→1':'Pairs 9→1', fr?'Toute paire identique':'Any matching pair', fr?'Plus élevée gagne.':'Higher pair wins.','')+
+          rowDesc('3',n('perfect_nine'),fr?'Somme = 9':'Sum = 9', fr?'Dernière main avant les Points.':'Strongest hand before Points.','')+
+          rowDesc('4',fr?'Points 8→1':'Points 8→1', fr?'Dernier chiffre de la somme':'Last digit of sum', fr?'Le plus élevé gagne.':'Highest wins.','')+
+          rowDesc('5',n('zero'),fr?'Somme = 0':'Sum = 0', fr?'La plus faible hors Échec.':'Weakest above Bust.','')+
+          rowDesc('6',fr?'Échec':'Bust', fr?'Aucune combo 10/20/30':'No valid 10/20/30', fr?'Défaite automatique.':'Automatic loss.','')
+        )}
+      </div>
+      <div>
+        ${sec(tx('r5about'), `<p style="font-size:11px;color:var(--c-muted);line-height:1.6;margin-bottom:6px">${tx('r5about1')}</p><p style="font-size:11px;color:var(--c-muted);line-height:1.6">${tx('r5about2')}</p>`)}
+        ${sec(tx('r5how'),
+          [tx('r5how1'),tx('r5how2'),tx('r5how3')].map((s,i)=>`<div style="display:flex;gap:8px;margin-bottom:6px;align-items:flex-start"><span style="width:17px;height:17px;border-radius:50%;background:var(--c-red-dim);border:1px solid var(--c-red-line);color:#e07070;font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px">${i+1}</span><span style="font-size:11px;color:var(--c-muted);line-height:1.5">${s}</span></div>`).join('')
+        )}
+        ${sec(tx('r5bets'), [tx('r5b1'),tx('r5b2'),tx('r5b3'),tx('r5b4'),tx('r5b5'),tx('r5b6')].map(s=>bullet('•',s)).join(''))}
+        ${sec(tx('r5tips'), [tx('r5t1'),tx('r5t2'),tx('r5t3')].map((s,i)=>bullet(['🐾','🔄','👁️'][i],s)).join(''))}
+      </div>
+    </div>`;
+  }
+
+  return `<div class="col-foot">
+    <div class="rank-hd${open?' open':''}" onclick="${toggleFn}">
+      <span class="col-ttl"><span class="ico">format_list_numbered</span>${title}</span>
+      <span class="ico rank-chevron">expand_more</span>
+    </div>
+    <div class="rank-body${open?' open':''}">${body}</div>
+  </div>`;
+}
+
+// ── Render ────────────────────────────────────────────────────────────────────
+function render() {
+  // Save scroll positions before re-rendering
+  const scrollL = document.querySelector('.col-l')?.scrollTop || 0;
+  const scrollR = document.querySelector('.col-r')?.scrollTop || 0;
+  const scrollC = document.querySelector('.col-c')?.scrollTop || 0;
+
+  function restoreScroll() {
+    requestAnimationFrame(() => {
+      const l = document.querySelector('.col-l'); if(l) l.scrollTop = scrollL;
+      const r = document.querySelector('.col-r'); if(r) r.scrollTop = scrollR;
+      const c = document.querySelector('.col-c'); if(c) c.scrollTop = scrollC;
+    });
+  }
+
+  // My hand
+  const myFull = S.c1.n&&S.c1.col&&S.c2.n&&S.c2.col;
+  const myH = myFull ? evalHand(S.c1,S.c2) : null;
+  const anyMy = S.c1.n||S.c1.col||S.c2.n||S.c2.col;
+  const missing = [];
+  if (!S.c1.n||!S.c1.col) missing.push(tx('c1'));
+  if (!S.c2.n||!S.c2.col) missing.push(tx('c2'));
+
+  const leftHTML = `<div class="col col-l">
+    <div class="col-hd"><span class="col-ttl"><span class="ico">style</span>${tx('myHand')}</span></div>
+    <div class="col-bd">
+      <div class="chips">${chip(S.c1,tx('c1'))}${chip(S.c2,tx('c2'))}</div>
+      ${!anyMy?`<div class="hint" style="margin-bottom:10px">${tx('selectYours')}</div>`:''}
+      ${selector(S.c1,'c1',tx('c1'), false)}
+      ${selector(S.c2,'c2',tx('c2'), false)}
+      ${myH?`<div class="hand-pill-inline">${handName(myH)}</div>`:anyMy&&missing.length?`<div class="hint">${tx('selectMissing',missing.join(' & '))}</div>`:''}
+    </div>
+  </div>`;
+
+  // Opponents
+  const validOpps = S.opps.filter(o=>o.n&&o.col&&!o.folded);
+  const anyUnfoldedOpps = S.opps.filter(o=>!o.folded);
+  
+  // ── Five-Card / Cinq-Cartes mode — full calculator ──
+  if (S.mode === 'cinq') {
+    document.getElementById('tab-cinq').textContent = S.lang==='fr' ? 'Cinq-Cartes' : 'Five-Card';
+    document.getElementById('tab-duo').className = 'mode-tab';
+    document.getElementById('tab-cinq').className = 'mode-tab on';
+    document.getElementById('tab-cheat').className = 'mode-tab';
+
+    const filledCount = S5.cards.filter(c=>c.n&&c.col).length;
+    const result5 = filledCount===5 ? evalFiveCardHand(S5.cards) : null;
+    const myH5 = result5&&!result5.bust ? result5.hand : null;
+    const validOpps5 = S5.opps.filter(o=>o.n&&o.col&&!o.folded);
+    const anyUnfolded5 = S5.opps.filter(o=>!o.folded);
+
+    // ── Left: My Hand (5 cards) ──────────────────────────────
+    const chips5 = S5.cards.map((c,i) => {
+      const ok=c.n&&c.col, isR=c.col==='red';
+      const isBase = result5&&!result5.bust&&result5.base.some(b=>b===c);
+      const isHandCard = result5&&!result5.bust&&!isBase&&ok;
+      const nc = ok?(isR?'#e07070':'#d4b84a'):'var(--c-faint)';
+      const pfx = isR?'R':(S.lang==='fr'?'J':'Y');
+      if (ok) {
+        const imgUrl = `Images/Cards/${isR?'R':'Y'}${c.n}.png`;
+        const extraStyle = isBase?'opacity:.38;filter:grayscale(.4);':isHandCard?'box-shadow:0 0 12px rgba(233,193,118,.35);':'' ;
+        const borderStyle = isHandCard?'border-color:rgba(233,193,118,.7);':'';
+        return `<div class="chip${isR?' r':' y'} filled" style="--card-img:url('${imgUrl}');flex:1;min-height:68px;${extraStyle}${borderStyle}">
+          <span class="chip-corner">${pfx}</span>
+          <span class="chip-n" style="color:${nc};font-size:22px">${c.n}</span>
+          <span class="chip-c" style="color:${nc};font-size:8px">${tx(isR?'red':'yellow')}</span>
+          ${isBase?`<span style="position:absolute;bottom:3px;font-size:7px;color:var(--c-faint);letter-spacing:.05em;text-transform:uppercase">BASE</span>`:''}
+          ${isHandCard?`<span style="position:absolute;bottom:3px;font-size:7px;color:var(--c-gold);letter-spacing:.05em;text-transform:uppercase;font-weight:700">HAND</span>`:''}
+        </div>`;
+      }
+      return `<div class="chip" style="flex:1;min-height:68px"><span class="chip-e" style="font-size:9px">${S.lang==='fr'?'C':'C'}${i+1}</span></div>`;
+    }).join('');
+
+    const labels5 = S.lang==='fr'
+      ? ['Carte 1','Carte 2','Carte 3','Carte 4','Carte 5']
+      : ['Card 1','Card 2','Card 3','Card 4','Card 5'];
+    let selectors5 = '';
+    S5.cards.forEach((c,i) => {
+      selectors5 += selector5(c,'c'+i,labels5[i],false);
+    });
+
+    let resultBadge = '';
+    if (result5) {
+      if (result5.bust) {
+        resultBadge = `<div class="hand-pill-inline" style="background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);color:#f87171">⚠ ${S.lang==='fr'?'Échec — Défaite automatique':'Bust — Automatic loss'}</div>`;
+      } else {
+        const baseStr = result5.base.map(b=>(b.col==='red'?'R':(S.lang==='fr'?'J':'Y'))+b.n).join('+');
+        const baseSum = result5.base.reduce((s,b)=>s+b.n,0);
+        resultBadge = `<div class="hand-pill-inline">${handName(result5.hand)}</div>
+          <div style="font-size:10px;color:var(--c-faint);text-align:center;margin-top:4px;letter-spacing:.05em">
+            ${S.lang==='fr'?'Base :':'Base:'} ${baseStr} = ${baseSum}
+          </div>`;
+      }
+    } else if (filledCount>0) {
+      const rem = 5-filledCount;
+      resultBadge = `<div class="hint">${S.lang==='fr'?`Sélectionnez ${rem} carte${rem>1?'s':''} de plus`:`Select ${rem} more card${rem>1?'s':''}`}</div>`;
+    }
+
+    const left5 = `<div class="col col-l">
+      <div class="col-hd"><span class="col-ttl"><span class="ico">style</span>${tx('f5hand')}</span></div>
+      <div class="col-bd">
+        <div class="chips" style="gap:5px;margin-bottom:12px">${chips5}</div>
+        ${!filledCount?`<div class="hint" style="margin-bottom:10px">${S.lang==='fr'?'Sélectionnez vos 5 cartes':'Select your 5 cards'}</div>`:''}
+        ${selectors5}
+        ${resultBadge}
+      </div>
+    </div>`;
+
+    // ── Right: Opponents (1 visible card each) ───────────────
+    let right5 = `<div class="col col-r">
+      <div class="col-hd">
+        <span class="col-ttl"><span class="ico">groups</span>${tx('f5opp').split('(')[0].trim()}(s)</span>
+        <div class="opp-count-sel"><div class="opp-count-btns">
+          ${[1,2,3].map(n=>`<button class="ocb${S5.opps.length===n?' on':''}" onclick="setOppCount5(${n})">${n}</button>`).join('')}
+        </div></div>
+      </div>
+      <div class="col-bd">`;
+    S5.opps.forEach((o,i) => {
+      if (S5.opps.length > 1) right5 += `<div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button class="opp-cross" onclick="removeOppAt5(${i})"><span class="ico">close</span></button></div>`;
+      right5 += selector5(o,'o'+i,tx('oppCard',i+1),true,i) + (!o.folded ? threat(o) : '');
+    });
+    if (myH5 && validOpps5.length) {
+      const {perOpp:po5} = computeOdds5(myH5, validOpps5);
+      right5 += '<div style="margin-top:14px">';
+      S5.opps.forEach((o,i) => {
+        if (!o.n||!o.col||o.folded) return;
+        const r = po5[validOpps5.indexOf(o)];
+        right5 += `<div class="res-block">
+          ${obar(r.w,r.l,r.ti,r.tot)}
+          <button class="dtl-btn" onclick="togDtl5(${i})"><span class="ico">${S5.dtl[i]?'expand_less':'expand_more'}</span>${S5.dtl[i]?tx('hideDtl'):tx('showDtl')}</button>
+          ${S5.dtl[i]?`<div class="dtl-scroll"><table class="dtl-tbl">
+            <thead><tr><th>${tx('th2')}</th><th>${tx('thHand')}</th><th>${tx('thRes')}</th></tr></thead>
+            <tbody>${r.dtl.map(d=>`<tr>
+              <td><span style="color:${d.card.col==='red'?'#d46b6b':'#d4b84a'};font-weight:600">${d.card.col==='red'?'R':(S.lang==='fr'?'J':'Y')}${d.card.n}</span></td>
+              <td style="color:var(--c-muted)">${handName(d.oh)}</td>
+              <td><span style="color:${rCol(d.res)}">${rIco(d.res)}</span></td>
+            </tr>`).join('')}</tbody>
+          </table></div>`:''}
+        </div>`;
+      });
+      right5 += '</div>';
+    }
+    right5 += '</div></div>';
+
+    // ── Center: Win % ────────────────────────────────────────
+    let center5 = '<div class="col-c"><div class="stage-bg"></div>';
+    if (!result5) {
+      center5 += `<div class="stage-empty"><span class="ico">playing_cards</span><p>${S.lang==='fr'?'Sélectionnez vos 5 cartes pour commencer':'Select your 5 cards to begin'}</p></div>`;
+    } else if (result5.bust) {
+      center5 += `<div class="stage-empty" style="opacity:1"><span class="ico" style="color:#f87171;font-size:54px">block</span><p style="color:#f87171;font-size:15px">${S.lang==='fr'?'Échec — Défaite automatique':'Bust — Automatic loss'}</p></div>
+      <div class="acts" style="margin-top:20px">
+        <button class="btn-next" onclick="nextTour5()"><span class="ico">skip_next</span>${tx('next')}</button>
+        <button class="btn-rst" onclick="resetAll5()"><span class="ico">refresh</span>${tx('reset')}</button>
+      </div>`;
+    } else if (!anyUnfolded5.length) {
+      center5 += `<div class="stage-empty"><span class="ico" style="color:var(--c-win);font-size:54px">emoji_events</span><p style="color:var(--c-win);font-size:16px">${tx('allFolded')}</p></div>`;
+    } else if (!validOpps5.length) {
+      center5 += `<div class="stage-empty"><span class="ico">person_search</span><p>${tx('f5promptOpp')}</p></div>`;
+    } else {
+      const {perOpp:po5c,combo:combo5} = computeOdds5(myH5, validOpps5);
+      const src5 = combo5||po5c[0];
+      const wr5 = src5.w/src5.tot;
+      const wp5 = pct(src5.w,src5.tot);
+      const cls5 = wr5>=0.55?'win':wr5>=0.35?'caution':'danger';
+      const lbl5 = combo5?tx('f5winVsAll',validOpps5.length):tx('f5winVs');
+      center5 += `
+        <div class="prob-lbl">${lbl5}</div>
+        <div class="prob-num ${cls5}"><span class="n">${wp5}</span><span class="s">%</span></div>
+        <div class="sbar-wrap">${sbar(src5.w,src5.l,src5.ti,src5.tot)}</div>
+        <div class="sit-wrap">
+          <div class="sit-lbl">${tx('f5situation')}</div>
+          <div class="sit-seg">
+            <button class="${!S5.raising?'on':''}" onclick="setSit5(false)"><span class="ico">flag</span>${tx('first')}</button>
+            <button class="${S5.raising?'on':''}" onclick="setSit5(true)"><span class="ico">trending_up</span>${tx('raise')}</button>
+          </div>
+        </div>
+        <div class="advice-wrap">${advice(src5.w,src5.l,src5.tot,S5.raising)}</div>
+        <div class="acts">
+          <button class="btn-next" onclick="nextTour5()"><span class="ico">skip_next</span>${tx('next')}</button>
+          <button class="btn-rst" onclick="resetAll5()"><span class="ico">refresh</span>${tx('reset')}</button>
+        </div>`;
+    }
+    center5 += '</div>';
+
+    document.getElementById('arena').innerHTML = left5 + center5 + right5 + rankings();
+    restoreScroll();
+    document.getElementById('bar-right').innerHTML =
+      `<div class="lang-seg">
+        <button class="${S.lang==='en'?'on':''}" onclick="setLang('en')"><span class="flag">🇬🇧</span>EN</button>
+        <button class="${S.lang==='fr'?'on':''}" onclick="setLang('fr')"><span class="flag">🇫🇷</span>FR</button>
+      </div>`;
+    return;
+  }
+
+  // ── Spot Cheaters mode ────────────────────────────────────
+  if (S.mode === 'cheat') {
+    const isFr = S.lang === 'fr';
+    document.getElementById('tab-duo').className = 'mode-tab';
+    document.getElementById('tab-cinq').textContent = isFr ? 'Cinq-Cartes' : 'Five-Card';
+    document.getElementById('tab-cinq').className = 'mode-tab';
+    document.getElementById('tab-cheat').className = 'mode-tab on';
+    document.getElementById('arena').innerHTML = `
+      <div class="cheat-page">
+        <div class="col-hd">
+          <span class="col-ttl"><span class="ico">visibility</span>${tx('cheatTitle')}</span>
+          <span style="font-size:10px;color:var(--c-faint);text-transform:uppercase;letter-spacing:.14em">${tx('cheatSubtitle')}</span>
+        </div>
+        <div class="cheat-scroll">
+          <div class="cheat-section-title">${tx('cheatWhenDealing')}</div>
+          <div class="cheat-card">
+            <div class="cheat-card-text">
+              <div class="cheat-card-label normal"><span class="ico">check_circle</span>${tx('cheatNormalLabel')}</div>
+              <div class="cheat-card-desc">${tx('cheatNormalDesc')}</div>
+            </div>
+            <div class="cheat-gif">
+              <img src="Images/Normal.gif" alt="Normal dealing" />
+              <div class="cheat-gif-label normal">${tx('cheatNormalLabel')}</div>
+            </div>
+          </div>
+          <div class="cheat-divider"></div>
+          <div class="cheat-card">
+            <div class="cheat-card-text">
+              <div class="cheat-card-label cheating"><span class="ico">warning</span>${tx('cheatCheatLabel')}</div>
+              <div class="cheat-card-desc">${tx('cheatCheatDesc')}</div>
+            </div>
+            <div class="cheat-gif">
+              <img src="Images/Cheat.gif" alt="Bottom dealing" />
+              <div class="cheat-gif-label cheating">${tx('cheatCheatLabel')}</div>
+            </div>
+          </div>
+          <div class="cheat-tip">
+            <span class="ico">lightbulb</span>
+            <div class="cheat-tip-text">${tx('cheatTip')}</div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.getElementById('bar-right').innerHTML =
+      `<div class="lang-seg">
+        <button class="${S.lang==='en'?'on':''}" onclick="setLang('en')"><span class="flag">🇬🇧</span>EN</button>
+        <button class="${S.lang==='fr'?'on':''}" onclick="setLang('fr')"><span class="flag">🇫🇷</span>FR</button>
+      </div>`;
+    return;
+  }
+
+  // Restore tab labels for Duo mode
+  document.getElementById('tab-cinq').textContent = S.lang==='fr' ? 'Cinq-Cartes' : 'Five-Card';
+  document.getElementById('tab-duo').className = 'mode-tab on';
+  document.getElementById('tab-cinq').className = 'mode-tab';
+  document.getElementById('tab-cheat').className = 'mode-tab';
+
+  let rightHTML = `<div class="col col-r">
+    <div class="col-hd">
+      <span class="col-ttl"><span class="ico">groups</span>${tx('opponent')}(s)</span>
+      <div class="opp-count-sel">
+        <div class="opp-count-btns">
+          ${[1,2,3].map(n=>`<button class="ocb${S.opps.length===n?' on':''}" onclick="setOppCount(${n})">${n}</button>`).join('')}
+        </div>
+      </div>
+    </div>
+    <div class="col-bd">`;
+
+  S.opps.forEach((o,i) => {
+    if (S.opps.length > 1) {
+      rightHTML += `<div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button class="opp-cross" onclick="removeOppAt(${i})" title="Remove"><span class="ico">close</span></button></div>`;
+    }
+    rightHTML += selector(o,'o'+i,tx('oppCard',i+1), true, i) + (!o.folded ? threat(o) : '');
+  });
+
+  // Per-opponent odds blocks — NO VS labels, NO combined section
+  if (myH && validOpps.length) {
+    const { perOpp } = computeOdds(myH, validOpps);
+    rightHTML += '<div style="margin-top:14px">';
+    S.opps.forEach((o,i) => {
+      if (!o.n || !o.col || o.folded) return;
+      const vIdx = validOpps.indexOf(o);
+      const r = perOpp[vIdx];
+      rightHTML += `<div class="res-block">
+        ${obar(r.w,r.l,r.ti,r.tot)}
+        <button class="dtl-btn" onclick="togDtl(${i})"><span class="ico">${S.dtl[i]?'expand_less':'expand_more'}</span>${S.dtl[i]?tx('hideDtl'):tx('showDtl')}</button>
+        ${S.dtl[i]?`<div class="dtl-scroll"><table class="dtl-tbl">
+          <thead><tr><th>${tx('th2')}</th><th>${tx('thHand')}</th><th>${tx('thRes')}</th></tr></thead>
+          <tbody>${r.dtl.map(d=>`<tr>
+            <td><span style="color:${d.card.col==='red'?'#d46b6b':'#d4b84a'};font-weight:600">${d.card.col==='red'?'R':(S.lang==='fr'?'J':'Y')}${d.card.n}</span></td>
+            <td style="color:var(--c-muted)">${handName(d.oh)}</td>
+            <td><span style="color:${rCol(d.res)}">${rIco(d.res)}</span></td>
+          </tr>`).join('')}</tbody>
+        </table></div>`:''}
+      </div>`;
+    });
+    rightHTML += '</div>';
+  }
+  rightHTML += '</div></div>';
+
+  // Center
+  let centerHTML = '<div class="col-c"><div class="stage-bg"></div>';
+  if (!myH) {
+    centerHTML += `<div class="stage-empty"><span class="ico">playing_cards</span><p>${tx('promptCards')}</p></div>`;
+  } else if (!anyUnfoldedOpps.length) {
+    centerHTML += `<div class="stage-empty"><span class="ico" style="color:var(--c-win); font-size:54px;">emoji_events</span><p style="color:var(--c-win); font-size:16px; ">${tx('allFolded')}</p></div>`;
+  } else if (!validOpps.length) {
+    centerHTML += `<div class="stage-empty"><span class="ico">person_search</span><p>${tx('promptOpp')}</p></div>`;
+  } else {
+    const { perOpp, combo } = computeOdds(myH, validOpps);
+    const src = combo || perOpp[0];
+    const wr = src.w/src.tot;
+    const wp = pct(src.w, src.tot);
+    const cls = wr>=0.55?'win':wr>=0.35?'caution':'danger';
+    const lbl = combo ? tx('winVsAll',validOpps.length) : tx('winVs');
+    centerHTML += `
+      <div class="prob-lbl">${lbl}</div>
+      <div class="prob-num ${cls}"><span class="n">${wp}</span><span class="s">%</span></div>
+      <div class="sbar-wrap">${sbar(src.w,src.l,src.ti,src.tot)}</div>
+      <div class="sit-wrap">
+        <div class="sit-lbl">${tx('situation')}</div>
+        <div class="sit-seg">
+          <button class="${!S.raising?'on':''}" onclick="setSit(false)"><span class="ico">flag</span>${tx('first')}</button>
+          <button class="${S.raising?'on':''}" onclick="setSit(true)"><span class="ico">trending_up</span>${tx('raise')}</button>
+        </div>
+      </div>
+      <div class="advice-wrap">${advice(src.w,src.l,src.tot,S.raising)}</div>
+      <div class="acts">
+        <button class="btn-next" onclick="nextTour()"><span class="ico">skip_next</span>${tx('next')}</button>
+        <button class="btn-rst" onclick="resetAll()"><span class="ico">refresh</span>${tx('reset')}</button>
+      </div>`;
+  }
+  centerHTML += '</div>';
+
+  // Update DOM
+  document.getElementById('arena').innerHTML = leftHTML + centerHTML + rightHTML + rankings();
+  restoreScroll();
+  document.getElementById('bar-right').innerHTML =
+    `<div class="lang-seg">
+      <button class="${S.lang==='en'?'on':''}" onclick="setLang('en')"><span class="flag">🇬🇧</span>EN</button>
+      <button class="${S.lang==='fr'?'on':''}" onclick="setLang('fr')"><span class="flag">🇫🇷</span>FR</button>
+    </div>`;
+}
+
+// ── Event handlers ────────────────────────────────────────────────────────────
+window.pickCard = (key, n, col) => { 
+  bustCache(); 
+  const obj = (key==='c1'?S.c1:key==='c2'?S.c2:S.opps[+key.slice(1)]); 
+  if (obj.n === n && obj.col === col) {
+    obj.n = null; 
+    obj.col = null;
+  } else {
+    obj.n = n; 
+    obj.col = col;
+  }
+  render(); 
+};
+window.setOppCount = n => {
+  // Grow or shrink to the requested count, preserving existing opp data
+  while (S.opps.length < n) S.opps.push({n:null,col:null,folded:false});
+  while (S.opps.length > n) { delete S.dtl[S.opps.length-1]; S.opps.pop(); }
+  bustCache(); render();
+};
+window.removeOppAt = i => {
+  if (S.opps.length <= 1) return;
+  S.opps.splice(i, 1);
+  // Rebuild dtl keys
+  const newDtl = {};
+  Object.keys(S.dtl).forEach(k => { if (+k < i) newDtl[k]=S.dtl[k]; else if (+k > i) newDtl[+k-1]=S.dtl[k]; });
+  S.dtl = newDtl;
+  bustCache(); render();
+};
+window.togDtl  = i         => { S.dtl[i]=!S.dtl[i]; render(); };
+window.setSit  = v         => { S.raising=v; render(); };
+window.setLang = l         => { S.lang=l; render(); };
+window.toggleRanks = ()    => { S.showRanks=!S.showRanks; render(); };
+window.toggleRanks5 = ()   => { S5.showRanks5=!S5.showRanks5; render(); };
+window.toggleFold = i      => { S.opps[i].folded=!S.opps[i].folded; bustCache(); render(); };
+window.toggleFold5 = i     => { S5.opps[i].folded=!S5.opps[i].folded; bustCache(); render(); };
+window.setMode = m         => { S.mode=m; render(); };
+
+// Five-Card specific handlers
+window.pickCard5 = (key, n, col) => {
+  bustCache();
+  const obj = key.startsWith('o') ? S5.opps[+key.slice(1)] : S5.cards[+key.slice(1)];
+  if (obj.n===n && obj.col===col) { obj.n=null; obj.col=null; } else { obj.n=n; obj.col=col; }
+  render();
+};
+window.setOppCount5 = n => {
+  while (S5.opps.length < n) S5.opps.push({n:null,col:null,folded:false});
+  while (S5.opps.length > n) { delete S5.dtl[S5.opps.length-1]; S5.opps.pop(); }
+  bustCache(); render();
+};
+window.removeOppAt5 = i => {
+  if (S5.opps.length <= 1) return;
+  S5.opps.splice(i,1);
+  const nd={}; Object.keys(S5.dtl).forEach(k=>{if(+k<i)nd[k]=S5.dtl[k];else if(+k>i)nd[+k-1]=S5.dtl[k];}); S5.dtl=nd;
+  bustCache(); render();
+};
+window.togDtl5 = i   => { S5.dtl[i]=!S5.dtl[i]; render(); };
+window.setSit5 = v   => { S5.raising=v; render(); };
+window.nextTour5 = () => {
+  const n=S5.opps.length;
+  S5.cards=Array.from({length:5},()=>({n:null,col:null}));
+  S5.opps=Array.from({length:n},()=>({n:null,col:null,folded:false}));
+  S5.dtl={}; S5.raising=false; bustCache(); render();
+};
+window.resetAll5 = () => {
+  S5.cards=Array.from({length:5},()=>({n:null,col:null}));
+  S5.opps=[{n:null,col:null,folded:false}];
+  S5.dtl={}; S5.raising=false; bustCache(); render();
+};
+window.nextTour = () => {
+  const n=S.opps.length;
+  S.c1={n:null,col:null}; S.c2={n:null,col:null};
+  S.opps=Array.from({length:n},()=>({n:null,col:null,folded:false}));
+  S.dtl={}; S.raising=false; bustCache(); render();
+};
+window.resetAll = () => {
+  S.c1={n:null,col:null}; S.c2={n:null,col:null};
+  S.opps=[{n:null,col:null,folded:false}];
+  S.dtl={}; S.raising=false; bustCache(); render();
+};
+
+render();
+</script>
+</body>
+</html>
