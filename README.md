@@ -16,11 +16,11 @@ The current version shows a red row and a yellow row side by side. One click pic
 # Things added to the Duo mode
 
 **Up to 3 opponents** — the original capped at 2, with basic Add/Remove buttons. Now supports 3, with individual remove buttons per opponent
-Fold button — you can mark an opponent as folded. Their card is still removed from the deck (so it doesn't appear as a possible card for anyone else) but they drop out of the odds
+Fold button — you can mark an opponent as folded. Their card is still removed from the deck (so it doesn't appear as a possible card for anyone else) but they drop out of the odds.
 
-**Threat warning** — when you enter an opponent's visible card, a badge appears explaining what dangerous hands that card could lead to (e.g. a Red 4 can form the High Warden, Executor, or Warden)
+**Threat warning** — when you enter an opponent's visible card, a badge appears explaining what dangerous hands that card could lead to (e.g. a Red 4 can form the High Warden, Executor, or Warden).
 
-**Hand Rankings & Rules panel** — a collapsible reference at the bottom showing every hand in order, the betting options, and the special hand rules
+**Hand Rankings & Rules panel** — a collapsible reference at the bottom showing every hand in order, the betting options, and the special hand rules.
 
 # Things added / corrected
 
