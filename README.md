@@ -25,15 +25,15 @@ Fold button — you can mark an opponent as folded. Their card is still removed 
 # Things added / corrected
 
 The Judge hand (3+7) didn't exist. It's now fully implemented: it beats all Pairs, but is treated as Zero against everything else.
-The Warden hand had three separate mistakes:
 
-It was getting a Rematch against every Pair — when it should lose to all of them
-It was losing to One-two — when One-two is actually the exact threshold where a Rematch should happen
-It was getting a Rematch against One-four, One-nine, One-ten, Four-ten, and Four-six — when it should lose to all of those too
+**Five-Card mode** — the original had no Five-Card support at all. The new version lets you enter all 5 cards you receive, automatically figures out the best 3-card combination to make a valid base (summing to 10 or 20), and shows you which 2 cards become your actual hand. If no valid combination exists, it tells you it's a Bust.
+**/!\ Didn't played the Five-Card mode yet. It's based on the in game rules.**
+
+**Spot Cheaters guide** — a visual guide that shows side-by-side animated images of how a dealer holds the cards normally vs. how they cheat (bottom-dealing), with advice on when and how to use the Accuse button.
 
 # Screenshots
 
-
-
-Five-Card mode — the original had no Five-Card support at all. The new version lets you enter all 5 cards you receive, automatically figures out the best 3-card combination to make a valid base (summing to 10 or 20), and shows you which 2 cards become your actual hand. If no valid combination exists, it tells you it's a Bust.
-Spot Cheaters — a visual guide that shows side-by-side animated images of how a dealer holds the cards normally vs. how they cheat (bottom-dealing), with advice on when and how to use the Accuse button.
+<img width="1437" height="654" alt="Image" src="https://github.com/user-attachments/assets/7e23631e-064c-46ed-ac25-ca3bc3041223" />
+<img width="1437" height="654" alt="Image" src="https://github.com/user-attachments/assets/a2511704-9b65-4127-90d2-4c1676875b78" />
+<img width="1437" height="654" alt="Image" src="https://github.com/user-attachments/assets/e1dedad3-14a5-4362-a792-6b160834f6ac" />
+<img width="1437" height="654" alt="Image" src="https://github.com/user-attachments/assets/cde09615-f7c2-469a-a370-eac69deff3cf" />
