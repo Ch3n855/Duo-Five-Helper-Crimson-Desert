@@ -33,7 +33,6 @@ The Judge hand (3+7) didn't exist. It's now fully implemented.
 
 # Screenshots
 
-<img width="1437" height="654" alt="Image" src="https://github.com/user-attachments/assets/7e23631e-064c-46ed-ac25-ca3bc3041223" />
-<img width="1437" height="654" alt="Image" src="https://github.com/user-attachments/assets/a2511704-9b65-4127-90d2-4c1676875b78" />
-<img width="1437" height="654" alt="Image" src="https://github.com/user-attachments/assets/e1dedad3-14a5-4362-a792-6b160834f6ac" />
-<img width="1437" height="654" alt="Image" src="https://github.com/user-attachments/assets/cde09615-f7c2-469a-a370-eac69deff3cf" />
+<img width="1431" height="649" alt="Image" src="https://github.com/user-attachments/assets/7e6b4fcd-c4a6-42cb-8b91-8066733f2684" />
+<img width="1431" height="649" alt="Image" src="https://github.com/user-attachments/assets/fb4f7fd1-751b-4b9c-857e-822c072cf118" />
+<img width="1431" height="649" alt="Image" src="https://github.com/user-attachments/assets/838d2acc-6c05-4c32-9f3e-1a51071d268b" />
