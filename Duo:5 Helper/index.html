@@ -287,6 +287,7 @@ html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans'
 .cheat-gif-label.normal{color:var(--c-win);}
 .cheat-gif-label.cheating{color:var(--c-lose);}
 .cheat-tip{display:flex;align-items:flex-start;gap:12px;padding:14px 18px;border-radius:2px;background:var(--c-panel2);border:1px solid var(--c-border);margin-top:28px;max-width:720px;}
+.cheat-tip.centered{max-width:100%;justify-content:center;text-align:center;align-items:center;}
 .cheat-tip .ico{font-size:18px;flex-shrink:0;margin-top:1px;color:var(--c-gold);}
 .cheat-tip-text{font-size:12px;color:var(--c-muted);line-height:1.65;}
 .cheat-tip-text strong{color:#fff;}
@@ -418,9 +419,12 @@ const LANGS = {
     cheatWhenDealing:'When dealing the cards',
     cheatNormalLabel:'Normal',
     cheatNormalDesc:'They hold the bundle of cards with their <em>thumb pointing down</em> and deal naturally from the top.',
-    cheatCheatLabel:'Cheating — Bottom Dealing',
+    cheatCheatLabel:'Cheating',
     cheatCheatDesc:'They grab the bundle from the side with their <em>thumb pointing up</em> to secretly pull a card from the bottom of the deck.',
     cheatTip:'If you spot it, hold the <strong>Accuse</strong> button. Correct — they\'re removed and their silver is split between players. Wrong — you get temporarily banned from the gambling den for a couple of in-game days. Be sure before you accuse.',
+    cheatWhenPlacing:'When placing the cards on the table',
+    cheatPlaceNormalDesc:'They toss the cards onto the table with <em>confidence</em>, without hesitation.',
+    cheatPlaceCheatDesc:'They bring both hands together and place the cards down very <em>carefully</em>, timidly.',
   },
   fr: {
     myHand:'Ma Main', opponent:'Adversaire',
@@ -513,6 +517,9 @@ const LANGS = {
     cheatCheatLabel:'Triche — Distribution par le bas',
     cheatCheatDesc:'Ils saisissent le paquet sur le côté avec le <em>pouce pointé vers le haut</em> pour tirer secrètement une carte depuis le dessous.',
     cheatTip:'Si vous le surprenez, maintenez le bouton <strong>Démasquer</strong>. Correct — il est éliminé et ses pièces sont partagées. Faux — vous êtes temporairement banni du repaire pour quelques jours en jeu. Soyez sûr avant d\'accuser.',
+    cheatWhenPlacing:'Lors du dépôt des cartes sur la table',
+    cheatPlaceNormalDesc:'Ils lancent les cartes sur la table avec <em>assurance</em>, sans hésitation.',
+    cheatPlaceCheatDesc:'Ils rapprochent les deux mains et posent les cartes très <em>délicatement</em>, de façon timide.',
   }
 };
 
@@ -1402,7 +1409,34 @@ function render() {
               <div class="cheat-gif-label cheating">${tx('cheatCheatLabel')}</div>
             </div>
           </div>
-          <div class="cheat-tip">
+
+          <div class="cheat-divider" style="margin-top:32px"></div>
+
+          <div class="cheat-section-title" style="margin-top:28px">${tx('cheatWhenPlacing')}</div>
+          <div class="cheat-card">
+            <div class="cheat-card-text">
+              <div class="cheat-card-label normal"><span class="ico">check_circle</span>${tx('cheatNormalLabel')}</div>
+              <div class="cheat-card-desc">${tx('cheatPlaceNormalDesc')}</div>
+            </div>
+            <div class="cheat-gif">
+              <img src="Images/Normal_drop.gif" alt="Normal placing" />
+              <div class="cheat-gif-label normal">${tx('cheatNormalLabel')}</div>
+            </div>
+          </div>
+          <div class="cheat-divider"></div>
+          <div class="cheat-card">
+            <div class="cheat-card-text">
+              <div class="cheat-card-label cheating"><span class="ico">warning</span>${tx('cheatCheatLabel')}</div>
+              <div class="cheat-card-desc">${tx('cheatPlaceCheatDesc')}</div>
+            </div>
+            <div class="cheat-gif">
+              <img src="Images/Cheat_drop.gif" alt="Cheating — careful placing" />
+              <div class="cheat-gif-label cheating">${tx('cheatCheatLabel')}</div>
+            </div>
+          </div>
+
+          <div class="cheat-divider" style="margin-top:32px"></div>
+          <div class="cheat-tip centered">
             <span class="ico">lightbulb</span>
             <div class="cheat-tip-text">${tx('cheatTip')}</div>
           </div>
