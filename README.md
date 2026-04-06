@@ -13,7 +13,7 @@ The current version gives you the in-game action — ALL-IN, DOUBLE RAISE, HALF 
 **How you pick cards**
 The current version shows a red row and a yellow row side by side. One click picks both the number and the colour. Cards already used somewhere else are greyed out so you can't accidentally pick them twice.
 
-# Things added to the Duo mode
+# Things added to the Duo mode :
 
 **Up to 3 opponents** — the original capped at 2, with basic Add/Remove buttons. Now supports 3, with individual remove buttons per opponent
 Fold button — you can mark an opponent as folded. Their card is still removed from the deck (so it doesn't appear as a possible card for anyone else) but they drop out of the odds.
@@ -22,9 +22,9 @@ Fold button — you can mark an opponent as folded. Their card is still removed 
 
 **Hand Rankings & Rules panel** — a collapsible reference at the bottom showing every hand in order, the betting options, and the special hand rules.
 
-# Things added / corrected
+# Things added / corrected :
 
-The Judge hand (3+7) didn't exist. It's now fully implemented: it beats all Pairs, but is treated as Zero against everything else.
+The Judge hand (3+7) didn't exist. It's now fully implemented.
 
 **Five-Card mode** — the original had no Five-Card support at all. The new version lets you enter all 5 cards you receive, automatically figures out the best 3-card combination to make a valid base (summing to 10 or 20), and shows you which 2 cards become your actual hand. If no valid combination exists, it tells you it's a Bust.
 **/!\ Didn't played the Five-Card mode yet. It's based on the in game rules.**
