@@ -27,7 +27,6 @@ Fold button — you can mark an opponent as folded. Their card is still removed 
 The Judge hand (3+7) didn't exist. It's now fully implemented.
 
 **Five-Card mode** — the original had no Five-Card support at all. The new version lets you enter all 5 cards you receive, automatically figures out the best 3-card combination to make a valid base, and shows you which 2 cards become your actual hand. If no valid combination exists, it tells you it's a Bust.
-**/!\ Didn't played the Five-Card mode yet. It's based on the in game rules.**
 
 **Spot Cheaters guide** — a visual guide that shows side-by-side animated images of how a NPCs holds the cards normally vs. how they cheat, with advice on when and how to use the Accuse button.
 
