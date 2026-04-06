@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Duo/5 Helper — Crimson Desert</title>
 <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600;700&family=Google+Sans+Display:wght@400;500;700&family=Newsreader:ital,opsz,wght@0,6..72,300..800;1,6..72,300..800&display=swap" rel="stylesheet">
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet">
@@ -77,7 +77,7 @@ html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans'
 .arena{flex:1;display:grid;grid-template-columns:var(--col-side) 1fr var(--col-side);grid-template-rows:1fr auto;min-height:0;overflow:hidden;}
 .col{display:flex;flex-direction:column;overflow-y:auto;min-height:0;}
 .col-l{grid-column:1;grid-row:1;background:var(--c-panel);border-right:1px solid var(--c-border);}
-.col-c{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow-y:auto;min-height:0;}
+.col-c{grid-column:2;grid-row:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;position:relative;overflow:hidden;min-height:0;}
 .col-r{grid-column:3;grid-row:1;background:var(--c-panel);border-left:1px solid var(--c-border);}
 .col-foot{grid-column:1/span 3;grid-row:2;border-top:1px solid var(--c-border);background:var(--c-black);}
 
@@ -190,21 +190,21 @@ html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans'
 
 /* ── Center probability ─────────────────────────────────── */
 .prob-lbl{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.45em;color:var(--c-faint);margin-bottom:12px;text-align:center;position:relative;z-index:1;}
-.prob-num{font-weight:700;line-height:1;text-align:center;margin-bottom:12px;width:100%;position:relative;z-index:1;}
-.prob-num .n{font-size:108px;letter-spacing:-.03em;}
-.prob-num .s{font-size:40px;vertical-align:super;opacity:.7;}
+.prob-num{font-weight:700;line-height:1;text-align:center;margin-bottom:8px;width:100%;position:relative;z-index:1;}
+.prob-num .n{font-size:88px;letter-spacing:-.03em;}
+.prob-num .s{font-size:34px;vertical-align:super;opacity:.7;}
 .prob-num.win .n,.prob-num.win .s{color:var(--c-win);text-shadow:0 0 48px rgba(61,184,112,.3);}
 .prob-num.caution .n,.prob-num.caution .s{color:var(--c-gold);text-shadow:0 0 48px rgba(212,168,67,.3);}
 .prob-num.danger .n,.prob-num.danger .s{color:var(--c-lose);text-shadow:0 0 48px rgba(217,79,79,.3);}
 
-.sbar-wrap{width:100%;max-width:300px;margin-bottom:16px;position:relative;z-index:1;}
+.sbar-wrap{width:100%;max-width:300px;margin-bottom:10px;position:relative;z-index:1;}
 .sbar{display:flex;height:3px;border-radius:0;overflow:hidden;margin-bottom:8px;background:rgba(255,255,255,.06);}
 .sbar .sw{background:var(--c-win);}
 .sbar .st{background:var(--c-tie);}
 .sbar .sl{background:var(--c-lose);}
 .sleg{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;font-size:10px;letter-spacing:.04em;}
 
-.sit-wrap{width:100%;max-width:300px;margin-bottom:14px;position:relative;z-index:1;}
+.sit-wrap{width:100%;max-width:300px;margin-bottom:10px;position:relative;z-index:1;}
 .sit-lbl{font-size:9px;font-weight:700;color:var(--c-faint);text-transform:uppercase;letter-spacing:.18em;margin-bottom:7px;text-align:center;}
 .sit-seg{display:flex;border:1px solid var(--c-border);border-radius:2px;overflow:hidden;}
 .sit-seg button{flex:1;padding:8px;border:none;font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:600;letter-spacing:.06em;cursor:pointer;transition:all .12s;background:transparent;color:var(--c-faint);display:flex;align-items:center;justify-content:center;gap:5px;text-transform:uppercase;}
@@ -216,10 +216,11 @@ html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans'
 .advice-wrap{width:100%;max-width:300px;position:relative;z-index:1;}
 .advice{border-radius:2px;padding:14px 16px;border-left:2px solid;background:rgba(255,255,255,.03);}
 .advice-tag{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.2em;opacity:.5;margin-bottom:4px;}
-.advice-act{font-size:32px;font-weight:800;line-height:1;margin-bottom:4px;letter-spacing:-.01em;}
+.advice-act{font-size:28px;font-weight:800;line-height:1;margin-bottom:4px;letter-spacing:-.01em;}
 .advice-sub{font-size:11px;opacity:.6;letter-spacing:.02em;}
+.advice-note{display:flex;align-items:flex-start;gap:6px;font-size:10px;line-height:1.4;margin-top:7px;padding-top:6px;border-top:1px solid rgba(255,255,255,.07);opacity:.85;}
 
-.acts{display:flex;gap:8px;width:100%;max-width:300px;margin-top:16px;position:relative;z-index:1;}
+.acts{display:flex;gap:8px;width:100%;max-width:300px;margin-top:10px;position:relative;z-index:1;}
 .btn-next{flex:1;padding:10px;border-radius:2px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.05);color:#fff;font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:700;letter-spacing:.1em;cursor:pointer;transition:all .12s;display:flex;align-items:center;justify-content:center;gap:5px;text-transform:uppercase;}
 .btn-next:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);}
 .btn-next .ico{font-size:13px;}
@@ -292,19 +293,6 @@ html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans'
 .cheat-tip-text{font-size:12px;color:var(--c-muted);line-height:1.65;}
 .cheat-tip-text strong{color:#fff;}
 
-/* ── Mobile ─────────────────────────────────────────────── */
-@media(max-width:900px){
-  html,body{overflow:auto;}
-  .shell{height:auto;}
-  .arena{grid-template-columns:1fr;grid-template-rows:auto auto auto auto;overflow:visible;}
-  .col-l{grid-column:1;grid-row:1;border-right:none;border-bottom:1px solid var(--c-border);}
-  .col-r{grid-column:1;grid-row:2;border-left:none;border-bottom:1px solid var(--c-border);}
-  .col-c{grid-column:1;grid-row:3;padding:20px 16px;}
-  .col-foot{grid-column:1;grid-row:4;}
-  .col,.col-c{overflow:visible;min-height:unset;}
-  .prob-num .n{font-size:80px;}
-  .rank-grid{grid-template-columns:repeat(2,1fr);}
-}
 </style>
 </head>
 <body>
@@ -347,6 +335,9 @@ const LANGS = {
     s_dbl_f:'Clear edge — press your advantage with a full raise',
     s_half_f:'Slight edge — stay aggressive but measured',
     s_check:'Unfavourable — pass for free and see what develops',
+    s_check_bluff:'Weak hand — let the timer run out and auto-check. The AI may read it as strength and fold (~40% of the time).',
+    s_opp_danger:'Caution — opponent shows a dangerous card (1, 2, or 10). These enable strong named hands. Fold unless your hand is solid.',
+    s_executor:'Executor is situational — it only beats Superior Pair. Against anything else it is worth 1 point. Consider folding unless you know the opponent holds Superior Pair.',
     s_allin_r:'Dominant hand — re-raise all-in and force folds',
     s_dbl_r:'Clear edge — re-raise and put pressure on opponents',
     s_half_r:'Slight edge — re-raise cautiously to control pot',
@@ -443,6 +434,9 @@ const LANGS = {
     s_dbl_f:'Avantage clair — appuyez avec une relance complète',
     s_half_f:'Léger avantage — restez agressif mais mesuré',
     s_check:'Cotes défavorables — passez gratuitement et observez',
+    s_check_bluff:'Main faible — laissez le temps s\'écouler et cochez automatiquement. L\'IA peut interpréter cela comme une main forte et se coucher (~40% du temps).',
+    s_opp_danger:'Attention — l\'adversaire montre une carte dangereuse (1, 2 ou 10). Celles-ci permettent des mains nommées puissantes. Couchez-vous sauf si votre main est solide.',
+    s_executor:'L\'Exécuteur est situationnel — il ne bat que la Paire Supérieure. Sinon, il vaut 1 point. Envisagez de vous coucher, sauf si vous savez que l\'adversaire a une Paire Supérieure.',
     s_allin_r:'Main dominante — relancer tapis et forcer les couchers',
     s_dbl_r:'Avantage clair — relancer et mettre la pression',
     s_half_r:'Léger avantage — relancer prudemment pour le pot',
@@ -1004,7 +998,7 @@ function sbar(w,l,ti,tot) {
 function pct(v, t) { return ((v/t)*100).toFixed(1); }
 
 // ── Advice ────────────────────────────────────────────────────────────────────
-function advice(w, l, tot, raising) {
+function advice(w, l, tot, raising, myH, visOpps) {
   if (!tot) return '';
   // Ties (rematches) count as half-wins — but only when there are actual wins.
   // If wins = 0, ties are rematches only: don't inflate the rate above CHECK/FOLD.
@@ -1025,6 +1019,28 @@ function advice(w, l, tot, raising) {
     else if (lr<0.80)  { act=tx('call');     sub=tx('s_call');    col='#e8934a'; }
     else               { act=tx('fold');     sub=tx('s_fold');    col='#f87171'; }
   }
+
+  // ── Contextual notes ────────────────────────────────────────────────────────
+  let notes = '';
+
+  // #1 — Slow-check bluff tip: weak hand in first-action only
+  if (!raising && act===tx('check')) {
+    notes += `<div class="advice-note" style="color:var(--c-faint)"><span class="ico" style="font-size:11px">tips_and_updates</span>${tx('s_check_bluff')}</div>`;
+  }
+
+  // #2 — Dangerous visible card warning: opp shows 1, 2, or 10
+  if (visOpps && visOpps.length > 0 && wr < 0.55) {
+    const hasDangerCard = visOpps.some(o => o.n===1 || o.n===2 || o.n===10);
+    if (hasDangerCard) {
+      notes += `<div class="advice-note" style="color:#e9c176"><span class="ico" style="font-size:11px">visibility</span>${tx('s_opp_danger')}</div>`;
+    }
+  }
+
+  // #3 — Executor caution note
+  if (myH && myH.t === 'executor') {
+    notes += `<div class="advice-note" style="color:var(--c-faint)"><span class="ico" style="font-size:11px">info</span>${tx('s_executor')}</div>`;
+  }
+
   // Confidence tag for ALL-IN: strong (≥90%) vs borderline (70–90%)
   const confidenceTag = (act===tx('allin') && wr < 0.90)
     ? `<div class="advice-tag" style="color:${col};opacity:.5;font-size:8px;margin-top:2px">${tx('allInBorderline')}</div>`
@@ -1034,6 +1050,7 @@ function advice(w, l, tot, raising) {
     <div class="advice-act" style="color:${col}">${act}</div>
     <div class="advice-sub" style="color:${col}">${sub}</div>
     ${confidenceTag}
+    ${notes}
   </div>`;
 }
 
@@ -1368,7 +1385,7 @@ function render() {
             <button class="${S5.raising?'on':''}" onclick="setSit5(true)"><span class="ico">trending_up</span>${tx('raise')}</button>
           </div>
         </div>
-        <div class="advice-wrap">${advice(src5.w,src5.l,src5.tot,S5.raising)}</div>
+        <div class="advice-wrap">${advice(src5.w,src5.l,src5.tot,S5.raising,myH5,validOpps5)}</div>
         <div class="acts">
           <button class="btn-next" onclick="nextTour5()"><span class="ico">skip_next</span>${tx('next')}</button>
           <button class="btn-rst" onclick="resetAll5()"><span class="ico">refresh</span>${tx('reset')}</button>
@@ -1539,7 +1556,7 @@ function render() {
           <button class="${S.raising?'on':''}" onclick="setSit(true)"><span class="ico">trending_up</span>${tx('raise')}</button>
         </div>
       </div>
-      <div class="advice-wrap">${advice(src.w,src.l,src.tot,S.raising)}</div>
+      <div class="advice-wrap">${advice(src.w,src.l,src.tot,S.raising,myH,validOpps)}</div>
       <div class="acts">
         <button class="btn-next" onclick="nextTour()"><span class="ico">skip_next</span>${tx('next')}</button>
         <button class="btn-rst" onclick="resetAll()"><span class="ico">refresh</span>${tx('reset')}</button>
