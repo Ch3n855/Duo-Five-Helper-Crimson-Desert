@@ -101,7 +101,7 @@ function adviceDuo(w, l, tot, raising, myH, visOpps) {
   }
 
   let notes = '';
-  if (!raising && act===tx('check')) {
+  if (!S.fedora && !raising && act===tx('check')) {
     notes += `<div class="advice-note" style="color:var(--c-faint)"><span class="ico" style="font-size:11px">tips_and_updates</span>${tx('s_check_bluff')}</div>`;
   }
   if (!S.fedora && visOpps && visOpps.length > 0 && wr < 0.55) {
@@ -167,8 +167,8 @@ function renderBarRight(mode) {
     ${mode === 'duo' || mode === 'cinq' ? `<button class="top-pill subtle${fedoraOn?' on':''}" onclick="${mode === 'cinq' ? 'toggleFedora5()' : 'toggleFedora()'}"><span class="ico">visibility</span>${tx('fedoraToggle')}</button>` : ''}
     ${mode !== 'cheat' && mode !== 'fedora' ? `<button class="top-pill subtle" onclick="${resetFn}"><span class="ico">refresh</span>${tx('reset')}</button>` : ''}
     <div class="lang-seg">
-      <button class="${S.lang==='en'?'on':''}" onclick="setLang('en')"><span class="flag">🇬🇧</span>EN</button>
-      <button class="${S.lang==='fr'?'on':''}" onclick="setLang('fr')"><span class="flag">🇫🇷</span>FR</button>
+      <button class="${S.lang==='en'?'on':''}" onclick="setLang('en')"><span class="flag flag-en" aria-hidden="true"></span>EN</button>
+      <button class="${S.lang==='fr'?'on':''}" onclick="setLang('fr')"><span class="flag flag-fr" aria-hidden="true"></span>FR</button>
     </div>
   </div>`;
 }

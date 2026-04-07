@@ -362,7 +362,7 @@ function render() {
         <button class="dtl-btn" onclick="togDtl(${i})"><span class="ico">${S.dtl[i]?'expand_less':'expand_more'}</span>${S.dtl[i]?tx('hideDtl'):tx('showDtl')}</button>
         ${S.dtl[i]?`<div class="dtl-scroll"><table class="dtl-tbl">
           <thead><tr><th>${tx('th2')}</th><th>${tx('thHand')}</th><th>${tx('thRes')}</th></tr></thead>
-          <tbody>${[...r.dtl].sort((a,b)=>{const o={lose:0,tie:1,win:2};return o[a.res]-o[b.res];}).map(d=>`<tr>
+          <tbody>${[...r.dtl].sort((a,b)=>{const o={lose:0,tie:1,win:2}; return o[a.res]-o[b.res] || handSortRank(b.oh)-handSortRank(a.oh) || b.card.n-a.card.n;}).map(d=>`<tr>
             <td><span style="color:${d.card.col==='red'?'#d46b6b':'#d4b84a'};font-weight:600">${d.card.col==='red'?'R':(S.lang==='fr'?'J':'Y')}${d.card.n}</span></td>
             <td style="color:var(--c-muted)">${handName(d.oh)}</td>
             <td><span style="color:${rCol(d.res)}">${rIco(d.res)}</span></td>
@@ -483,7 +483,7 @@ window.toggleRanks = ()    => { S.showRanks=!S.showRanks; render(); };
 window.toggleRanks5 = ()   => { S5.showRanks5=!S5.showRanks5; render(); };
 window.toggleFold = i      => { S.opps[i].folded=!S.opps[i].folded; bustCache(); render(); };
 window.toggleFold5 = i     => { S5.opps[i].folded=!S5.opps[i].folded; bustCache(); render(); };
-window.setMode = m         => { S.mode=m; render(); };
+window.setMode = m         => { S.media = null; S.mode=m; render(); };
 window.toggleFedora = ()   => { S.fedora=!S.fedora; bustCache(); render(); };
 window.toggleFedora5 = ()  => { S5.fedora=!S5.fedora; bustCache(); render(); };
 window.openMedia = (src, alt) => { S.media = { src, alt }; render(); };

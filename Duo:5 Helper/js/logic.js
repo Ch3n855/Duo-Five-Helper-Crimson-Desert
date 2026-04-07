@@ -251,7 +251,6 @@ function available() {
   if (S.c2.n&&S.c2.col) used.push(S.c2);
   S.opps.forEach(o => {
     if (o.n&&o.col) used.push({ n:o.n, col:o.col });
-    if (S.fedora && o.n2&&o.col2) used.push({ n:o.n2, col:o.col2 });
   });
   return removeKnownCards(DECK, used);
 }

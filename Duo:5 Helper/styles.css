@@ -33,11 +33,11 @@ html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans'
   --c-tie:#b8a030;
   --c-card-red:#b03030;
   --c-card-yellow:#8a6c10;
-  --col-side:310px;
+  --col-side:clamp(310px, 18vw, 380px);
 }
 
 /* ── Layout shell ───────────────────────────────────────── */
-.shell{display:flex;flex-direction:column;height:100vh;max-width:1440px;margin:0 auto;}
+.shell{display:flex;flex-direction:column;height:100vh;width:min(100vw,1920px);margin:0 auto;}
 
 /* ── Top bar ────────────────────────────────────────────── */
 .bar{
@@ -53,10 +53,12 @@ html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans'
 .bar-right{display:flex;align-items:center;gap:10px;justify-self:end;}
 
 .lang-seg{display:flex;gap:1px;background:var(--c-border);border-radius:3px;overflow:hidden;padding:1px;}
-.lang-seg button{display:flex;align-items:center;gap:5px;padding:4px 11px;border:none;background:transparent;color:var(--c-faint);font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;letter-spacing:.06em;border-radius:2px;}
+.lang-seg button{display:flex;align-items:center;gap:7px;padding:4px 11px;border:none;background:transparent;color:var(--c-faint);font-family:'Google Sans','Inter',sans-serif;font-size:11px;font-weight:600;cursor:pointer;transition:all .12s;letter-spacing:.06em;border-radius:2px;}
 .lang-seg button.on{background:#fff;color:#000;}
 .lang-seg button:not(.on):hover{color:#fff;}
-.flag{font-size:13px;}
+.flag{width:16px;height:12px;border-radius:2px;display:inline-block;flex-shrink:0;border:1px solid rgba(255,255,255,.16);background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);}
+.flag-en{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='48' viewBox='0 0 64 48'%3E%3Crect width='64' height='48' fill='%23012169'/%3E%3Cpath d='M0 0L64 48M64 0L0 48' stroke='%23fff' stroke-width='10'/%3E%3Cpath d='M0 0L64 48M64 0L0 48' stroke='%23C8102E' stroke-width='6'/%3E%3Cpath d='M32 0v48M0 24h64' stroke='%23fff' stroke-width='16'/%3E%3Cpath d='M32 0v48M0 24h64' stroke='%23C8102E' stroke-width='10'/%3E%3C/svg%3E");}
+.flag-fr{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='48' viewBox='0 0 64 48'%3E%3Crect width='21.333' height='48' x='0' fill='%230055A4'/%3E%3Crect width='21.334' height='48' x='21.333' fill='%23fff'/%3E%3Crect width='21.333' height='48' x='42.667' fill='%23EF4135'/%3E%3C/svg%3E");}
 
 /* ── Mode tabs ──────────────────────────────────────────── */
 .mode-tabs{display:flex;gap:0;border:1px solid var(--c-border);border-radius:3px;overflow:hidden;}
@@ -109,6 +111,23 @@ html,body{height:100%;background:#0a0a0a;color:#ffffff;font-family:'Google Sans'
 .col-ttl{font-size:10px;font-weight:700;color:var(--c-gold);text-transform:uppercase;letter-spacing:.18em;display:flex;align-items:center;gap:7px;}
 .col-ttl .ico{font-size:14px;}
 .col-bd{padding:16px 18px;flex:1;}
+
+@media (min-width: 1700px){
+  html,body{font-size:15px;}
+  .bar{height:58px;padding:0 34px;}
+  .bar-title{font-size:18px;}
+  .bar-sub{font-size:11px;}
+  .mode-tab{padding:7px 24px;font-size:12px;}
+  .top-pill{padding:12px 16px;font-size:12px;}
+  .top-pill.subtle{padding:9px 12px;font-size:11px;}
+  .col-hd{padding:16px 20px 14px;}
+  .col-bd{padding:18px 20px;}
+  .chip{min-height:98px;}
+  .prob-num .n{font-size:98px;}
+  .prob-num .s{font-size:38px;}
+  .col-c.stack .prob-num .n{font-size:84px;}
+  .col-c.stack .prob-num .s{font-size:31px;}
+}
 
 /* ── Card chips ─────────────────────────────────────────── */
 .chips{display:flex;gap:8px;margin-bottom:14px;}
