@@ -25,15 +25,41 @@ function render() {
     <div class="col-bd">
       <div class="chips">${chip(S.c1,tx('c1'))}${chip(S.c2,tx('c2'))}</div>
       ${!anyMy?`<div class="hint" style="margin-bottom:10px">${tx('selectYours')}</div>`:''}
-      ${selector(S.c1,'c1',tx('c1'), false)}
-      ${selector(S.c2,'c2',tx('c2'), false)}
-      ${myH?`<div class="hand-pill-inline">${handName(myH)}</div><div class="hint" style="text-align:left"><strong>${tx('handBehavior')}:</strong> ${handBehaviorNote(myH,'duo')}</div>`:anyMy&&missing.length?`<div class="hint">${tx('selectMissing',missing.join(' & '))}</div>`:''}
+      ${myH?`<div class="hand-pill-inline">${handName(myH)}</div>`:''}
+      ${duoHandCase(S.c1, S.c2, { title: tx('myHand'), keyA:'c1', keyB:'c2' })}
+      ${myH?`<div class="hint" style="text-align:left"><strong>${tx('handBehavior')}:</strong> ${handBehaviorNote(myH,'duo')}</div>`:anyMy&&missing.length?`<div class="hint">${tx('selectMissing',missing.join(' & '))}</div>`:''}
     </div>
   </div>`;
 
   // Opponents
-  const validOpps = S.opps.filter(o=>o.n&&o.col&&!o.folded);
+  const validOpps = S.opps.filter(o => {
+    if (o.folded || !o.n || !o.col) return false;
+    return S.fedora ? !!(o.n2 && o.col2) : true;
+  });
   const anyUnfoldedOpps = S.opps.filter(o=>!o.folded);
+  document.getElementById('tab-fedora').textContent = tx('fedoraGuideTab');
+
+  function fiveCardMarks(cards, resolved) {
+    const baseIdxs = [];
+    const handIdxs = [];
+    if (!resolved || resolved.bust || !resolved.base) return { baseIdxs, handIdxs };
+    cards.forEach((card, idx) => {
+      if (resolved.base.includes(card)) baseIdxs.push(idx);
+      else if (card.n && card.col) handIdxs.push(idx);
+    });
+    return { baseIdxs, handIdxs };
+  }
+
+  function fiveResolvedSummary(resolved, compact = false) {
+    if (!resolved) return '';
+    if (resolved.bust) {
+      return `<div class="hand-pill-inline compact" style="background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);color:#f87171">${S.lang==='fr'?'Échec — Défaite automatique':'Bust — Automatic loss'}</div>`;
+    }
+    const baseStr = resolved.base.map(b=>(b.col==='red'?'R':(S.lang==='fr'?'J':'Y'))+b.n).join('+');
+    const baseSum = resolved.base.reduce((s,b)=>s+b.n,0);
+    return `<div class="hand-pill-inline${compact?' compact':''}">${handName(resolved.hand)}</div>
+      <div class="opp-meta"><strong>${S.lang==='fr'?'Base :':'Base:'}</strong> ${baseStr} = ${baseSum}</div>`;
+  }
   
   // ── Five-Card / Cinq-Cartes mode — full calculator ──
   if (S.mode === 'cinq') {
@@ -41,22 +67,28 @@ function render() {
     document.getElementById('tab-duo').className = 'mode-tab';
     document.getElementById('tab-cinq').className = 'mode-tab on';
     document.getElementById('tab-cheat').className = 'mode-tab';
+    document.getElementById('tab-fedora').className = 'mode-tab';
 
     const filledCount = S5.cards.filter(c=>c.n&&c.col).length;
     const result5 = filledCount===5 ? evalFiveCardHand(S5.cards) : null;
     const myH5 = result5&&!result5.bust ? result5.hand : null;
-    const validOpps5 = S5.opps.filter(o=>o.n&&o.col&&!o.folded);
+    const validOpps5 = S5.opps.filter(o => {
+      if (o.folded) return false;
+      if (!S5.fedora) return !!(o.cards[0].n && o.cards[0].col);
+      return o.cards.every(card => card.n && card.col);
+    });
     const anyUnfolded5 = S5.opps.filter(o=>!o.folded);
 
     // ── Left: My Hand (5 cards) ──────────────────────────────
+    const { baseIdxs:myBaseIdxs, handIdxs:myHandIdxs } = fiveCardMarks(S5.cards, result5);
     const chips5 = S5.cards.map((c,i) => {
       const ok=c.n&&c.col, isR=c.col==='red';
-      const isBase = result5&&!result5.bust&&result5.base.some(b=>b===c);
-      const isHandCard = result5&&!result5.bust&&!isBase&&ok;
+      const isBase = myBaseIdxs.includes(i);
+      const isHandCard = myHandIdxs.includes(i);
       const nc = ok?(isR?'#e07070':'#d4b84a'):'var(--c-faint)';
       const pfx = isR?'R':(S.lang==='fr'?'J':'Y');
       if (ok) {
-        const extraStyle = isBase?'opacity:.38;filter:grayscale(.4);':isHandCard?'box-shadow:0 0 12px rgba(233,193,118,.35);':'' ;
+        const extraStyle = isBase?'opacity:.38;filter:grayscale(.4);':isHandCard?'box-shadow:0 0 12px rgba(233,193,118,.35);':'';
         const borderStyle = isHandCard?'border-color:rgba(233,193,118,.7);':'';
         return `<div class="chip${isR?' r':' y'} filled" style="background:${cardSurfaceStyle(c,{muted:isBase,accent:isHandCard})};flex:1;min-height:68px;${extraStyle}${borderStyle}">
           <span class="chip-corner">${pfx}</span>
@@ -69,28 +101,8 @@ function render() {
       return `<div class="chip" style="flex:1;min-height:68px"><span class="chip-e" style="font-size:9px">${S.lang==='fr'?'C':'C'}${i+1}</span></div>`;
     }).join('');
 
-    const labels5 = S.lang==='fr'
-      ? ['Carte 1','Carte 2','Carte 3','Carte 4','Carte 5']
-      : ['Card 1','Card 2','Card 3','Card 4','Card 5'];
-    let selectors5 = '';
-    S5.cards.forEach((c,i) => {
-      selectors5 += selector5(c,'c'+i,labels5[i],false);
-    });
-
     let resultBadge = '';
-    if (result5) {
-      if (result5.bust) {
-        resultBadge = `<div class="hand-pill-inline" style="background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);color:#f87171">⚠ ${S.lang==='fr'?'Échec — Défaite automatique':'Bust — Automatic loss'}</div>`;
-      } else {
-        const baseStr = result5.base.map(b=>(b.col==='red'?'R':(S.lang==='fr'?'J':'Y'))+b.n).join('+');
-        const baseSum = result5.base.reduce((s,b)=>s+b.n,0);
-        resultBadge = `<div class="hand-pill-inline">${handName(result5.hand)}</div>
-          <div class="hint" style="text-align:left"><strong>${tx('handBehavior')}:</strong> ${handBehaviorNote(result5.hand,'cinq')}</div>
-          <div style="font-size:10px;color:var(--c-faint);text-align:center;margin-top:4px;letter-spacing:.05em">
-            ${S.lang==='fr'?'Base :':'Base:'} ${baseStr} = ${baseSum}
-          </div>`;
-      }
-    } else if (filledCount>0) {
+    if (!result5 && filledCount>0) {
       const rem = 5-filledCount;
       resultBadge = `<div class="hint">${S.lang==='fr'?`Sélectionnez ${rem} carte${rem>1?'s':''} de plus`:`Select ${rem} more card${rem>1?'s':''}`}</div>`;
     }
@@ -100,8 +112,10 @@ function render() {
       <div class="col-bd">
         <div class="chips" style="gap:5px;margin-bottom:12px">${chips5}</div>
         ${!filledCount?`<div class="hint" style="margin-bottom:10px">${S.lang==='fr'?'Sélectionnez vos 5 cartes':'Select your 5 cards'}</div>`:''}
-        ${selectors5}
-        ${resultBadge}
+        ${result5 ? fiveResolvedSummary(result5) : ''}
+        ${fiveHandCase(S5.cards, 0, { title: tx('f5hand'), keyPrefix:'c', baseIdxs:myBaseIdxs, handIdxs:myHandIdxs })}
+        ${result5 && !result5.bust ? `<div class="hint" style="text-align:left"><strong>${tx('handBehavior')}:</strong> ${handBehaviorNote(result5.hand,'cinq')}</div>` : ''}
+        ${!result5 ? resultBadge : ''}
       </div>
     </div>`;
 
@@ -116,13 +130,13 @@ function render() {
       <div class="col-bd">`;
     S5.opps.forEach((o,i) => {
       if (S5.opps.length > 1) right5 += `<div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button class="opp-cross" onclick="removeOppAt5(${i})"><span class="ico">close</span></button></div>`;
-      right5 += selector5(o,'o'+i,tx('oppCard',i+1),true,i);
+      right5 += fiveOpponentSelector(o, i);
     });
     if (myH5 && validOpps5.length) {
       const {perOpp:po5} = computeOdds5(myH5, validOpps5);
       right5 += '<div style="margin-top:14px">';
       S5.opps.forEach((o,i) => {
-        if (!o.n||!o.col||o.folded) return;
+        if (o.folded || (!S5.fedora && (!o.cards[0].n || !o.cards[0].col)) || (S5.fedora && !o.cards.every(card => card.n && card.col))) return;
         const r = po5[validOpps5.indexOf(o)];
         right5 += `<div class="res-block">
           ${obar(r.w,r.l,r.ti,r.tot)}
@@ -154,7 +168,7 @@ function render() {
     } else if (!anyUnfolded5.length) {
       center5 += `<div class="stage-empty"><span class="ico" style="color:var(--c-win);font-size:54px">emoji_events</span><p style="color:var(--c-win);font-size:16px">${tx('allFolded')}</p></div>`;
     } else if (!validOpps5.length) {
-      center5 += `<div class="stage-empty"><span class="ico">person_search</span><p>${tx('f5promptOpp')}</p></div>`;
+      center5 += `<div class="stage-empty"><span class="ico">person_search</span><p>${S5.fedora ? tx('f5promptOppFedora') : tx('f5promptOpp')}</p></div>`;
     } else {
       center5 = '<div class="col-c stack"><div class="stage-bg"></div>';
       const {perOpp:po5c,combo:combo5} = computeOdds5(myH5, validOpps5);
@@ -194,6 +208,7 @@ function render() {
     document.getElementById('tab-cinq').textContent = isFr ? 'Cinq-Cartes' : 'Five-Card';
     document.getElementById('tab-cinq').className = 'mode-tab';
     document.getElementById('tab-cheat').className = 'mode-tab on';
+    document.getElementById('tab-fedora').className = 'mode-tab';
     document.getElementById('arena').innerHTML = `
       <div class="cheat-page">
         <div class="col-hd">
@@ -207,10 +222,7 @@ function render() {
               <div class="cheat-card-label normal"><span class="ico">check_circle</span>${tx('cheatNormalLabel')}</div>
               <div class="cheat-card-desc">${tx('cheatNormalDesc')}</div>
             </div>
-            <div class="cheat-gif">
-              <img src="Images/Normal.gif" alt="Normal dealing" />
-              <div class="cheat-gif-label normal">${tx('cheatNormalLabel')}</div>
-            </div>
+            ${mediaFrame('Images/Normal.gif', 'Normal dealing', tx('cheatNormalLabel'), 'normal')}
           </div>
           <div class="cheat-divider"></div>
           <div class="cheat-card">
@@ -218,10 +230,7 @@ function render() {
               <div class="cheat-card-label cheating"><span class="ico">warning</span>${tx('cheatCheatLabel')}</div>
               <div class="cheat-card-desc">${tx('cheatCheatDesc')}</div>
             </div>
-            <div class="cheat-gif">
-              <img src="Images/Cheat.gif" alt="Bottom dealing" />
-              <div class="cheat-gif-label cheating">${tx('cheatCheatLabel')}</div>
-            </div>
+            ${mediaFrame('Images/Cheat.gif', 'Bottom dealing', tx('cheatCheatLabel'), 'cheating')}
           </div>
 
           <div class="cheat-divider" style="margin-top:32px"></div>
@@ -232,10 +241,7 @@ function render() {
               <div class="cheat-card-label normal"><span class="ico">check_circle</span>${tx('cheatNormalLabel')}</div>
               <div class="cheat-card-desc">${tx('cheatPlaceNormalDesc')}</div>
             </div>
-            <div class="cheat-gif">
-              <img src="Images/Normal_drop.gif" alt="Normal placing" />
-              <div class="cheat-gif-label normal">${tx('cheatNormalLabel')}</div>
-            </div>
+            ${mediaFrame('Images/Normal_drop.gif', 'Normal placing', tx('cheatNormalLabel'), 'normal')}
           </div>
           <div class="cheat-divider"></div>
           <div class="cheat-card">
@@ -243,10 +249,7 @@ function render() {
               <div class="cheat-card-label cheating"><span class="ico">warning</span>${tx('cheatCheatLabel')}</div>
               <div class="cheat-card-desc">${tx('cheatPlaceCheatDesc')}</div>
             </div>
-            <div class="cheat-gif">
-              <img src="Images/Cheat_drop.gif" alt="Cheating — careful placing" />
-              <div class="cheat-gif-label cheating">${tx('cheatCheatLabel')}</div>
-            </div>
+            ${mediaFrame('Images/Cheat_drop.gif', 'Cheating — careful placing', tx('cheatCheatLabel'), 'cheating')}
           </div>
 
           <div class="cheat-divider" style="margin-top:32px"></div>
@@ -256,8 +259,67 @@ function render() {
           </div>
         </div>
       </div>
+      ${renderMediaViewer()}
     `;
     document.getElementById('bar-right').innerHTML = renderBarRight('cheat');
+    return;
+  }
+
+  if (S.mode === 'fedora') {
+    const isFr = S.lang === 'fr';
+    document.getElementById('tab-duo').className = 'mode-tab';
+    document.getElementById('tab-cinq').textContent = isFr ? 'Cinq-Cartes' : 'Five-Card';
+    document.getElementById('tab-cinq').className = 'mode-tab';
+    document.getElementById('tab-cheat').className = 'mode-tab';
+    document.getElementById('tab-fedora').className = 'mode-tab on';
+    document.getElementById('arena').innerHTML = `
+      <div class="cheat-page">
+        <div class="col-hd">
+          <span class="col-ttl"><span class="ico">visibility</span>${tx('fedoraGuideTitle')}</span>
+          <span style="font-size:10px;color:var(--c-faint);text-transform:uppercase;letter-spacing:.14em">${tx('fedoraGuideSubtitle')}</span>
+        </div>
+        <div class="cheat-scroll">
+          <div class="cheat-tip" style="margin-top:0;max-width:920px">
+            <span class="ico">info</span>
+            <div class="cheat-tip-text">${tx('fedoraGuideIntro')}</div>
+          </div>
+
+          <div class="cheat-divider"></div>
+          <div class="cheat-section-title">${tx('fedoraHowGet')}</div>
+
+          <div class="cheat-card">
+            <div class="cheat-card-text"><div class="cheat-card-desc">${tx('fedoraStep1')}</div></div>
+            ${mediaFrame('Images/Fedora_location.png', 'Fedora location', tx('fedoraLocationLabel'), 'guide')}
+          </div>
+          <div class="cheat-divider"></div>
+          <div class="cheat-card">
+            <div class="cheat-card-text"><div class="cheat-card-desc">${tx('fedoraStep2')}</div></div>
+            ${mediaFrame('Images/Fedora_quest.png', 'Fedora quest', tx('fedoraQuestLabel'), 'guide')}
+          </div>
+          <div class="cheat-divider"></div>
+          <div class="cheat-card">
+            <div class="cheat-card-text">
+              <div class="cheat-card-desc">${tx('fedoraStep3')}</div>
+              <div class="cheat-card-desc" style="margin-top:14px">${tx('fedoraStep4')}</div>
+              <div class="cheat-card-desc" style="margin-top:14px">${tx('fedoraStep5')}</div>
+            </div>
+            ${mediaFrame('Images/Fedora_buy.png', "Buy Deceiver's Fedora", tx('fedoraBuyLabel'), 'guide')}
+          </div>
+
+          <div class="cheat-divider" style="margin-top:32px"></div>
+          <div class="cheat-section-title">${tx('fedoraHowUse')}</div>
+          <div class="cheat-card">
+            <div class="cheat-card-text">
+              <div class="cheat-card-desc">${tx('fedoraUse1')}</div>
+              <div class="cheat-card-desc" style="margin-top:14px">${tx('fedoraUse2')}</div>
+            </div>
+            ${mediaFrame('Images/Fedora_use.png', "Use Deceiver's Fedora", tx('fedoraUseLabel'), 'guide')}
+          </div>
+        </div>
+      </div>
+      ${renderMediaViewer()}
+    `;
+    document.getElementById('bar-right').innerHTML = renderBarRight('fedora');
     return;
   }
 
@@ -266,6 +328,7 @@ function render() {
   document.getElementById('tab-duo').className = 'mode-tab on';
   document.getElementById('tab-cinq').className = 'mode-tab';
   document.getElementById('tab-cheat').className = 'mode-tab';
+  document.getElementById('tab-fedora').className = 'mode-tab';
 
   let rightHTML = `<div class="col col-r">
     <div class="col-hd">
@@ -282,7 +345,8 @@ function render() {
     if (S.opps.length > 1) {
       rightHTML += `<div style="display:flex;justify-content:flex-end;margin-bottom:4px"><button class="opp-cross" onclick="removeOppAt(${i})" title="Remove"><span class="ico">close</span></button></div>`;
     }
-    rightHTML += selector(o,'o'+i,tx('oppCard',i+1), true, i) + (!o.folded ? threat(o, isTaken) : '');
+    rightHTML += duoOpponentSelector(o, i);
+    rightHTML += (!o.folded && !S.fedora ? threat(o, isTaken) : '');
   });
 
   // Per-opponent odds blocks — NO VS labels, NO combined section
@@ -290,7 +354,7 @@ function render() {
     const { perOpp } = computeOdds(myH, validOpps);
     rightHTML += '<div style="margin-top:14px">';
     S.opps.forEach((o,i) => {
-      if (!o.n || !o.col || o.folded) return;
+      if (!o.n || !o.col || o.folded || (S.fedora && (!o.n2 || !o.col2))) return;
       const vIdx = validOpps.indexOf(o);
       const r = perOpp[vIdx];
       rightHTML += `<div class="res-block">
@@ -317,7 +381,7 @@ function render() {
   } else if (!anyUnfoldedOpps.length) {
     centerHTML += `<div class="stage-empty"><span class="ico" style="color:var(--c-win); font-size:54px;">emoji_events</span><p style="color:var(--c-win); font-size:16px; ">${tx('allFolded')}</p></div>`;
   } else if (!validOpps.length) {
-    centerHTML += `<div class="stage-empty"><span class="ico">person_search</span><p>${tx('promptOpp')}</p></div>`;
+    centerHTML += `<div class="stage-empty"><span class="ico">person_search</span><p>${S.fedora ? tx('promptOppFedora') : tx('promptOpp')}</p></div>`;
   } else {
     centerHTML = '<div class="col-c stack"><div class="stage-bg"></div>';
     const { perOpp, combo } = computeOdds(myH, validOpps);
@@ -370,21 +434,36 @@ function runRuleTests() {
   return testStatus;
 }
 
-window.pickCard = (key, n, col) => { 
-  bustCache(); 
-  const obj = (key==='c1'?S.c1:key==='c2'?S.c2:S.opps[+key.slice(1)]); 
-  if (obj.n === n && obj.col === col) {
-    obj.n = null; 
-    obj.col = null;
-  } else {
-    obj.n = n; 
-    obj.col = col;
+window.pickCard = (key, n, col) => {
+  bustCache();
+  const slotMatch = key.match(/^o(\d+)([ab])$/);
+  if (!slotMatch) {
+    const obj = key === 'c1' ? S.c1 : S.c2;
+    if (obj.n === n && obj.col === col) {
+      obj.n = null;
+      obj.col = null;
+    } else {
+      obj.n = n;
+      obj.col = col;
+    }
+    render();
+    return;
   }
-  render(); 
+  const opp = S.opps[+slotMatch[1]];
+  const nKey = slotMatch[2] === 'a' ? 'n' : 'n2';
+  const cKey = slotMatch[2] === 'a' ? 'col' : 'col2';
+  if (opp[nKey] === n && opp[cKey] === col) {
+    opp[nKey] = null;
+    opp[cKey] = null;
+  } else {
+    opp[nKey] = n;
+    opp[cKey] = col;
+  }
+  render();
 };
 window.setOppCount = n => {
   // Grow or shrink to the requested count, preserving existing opp data
-  while (S.opps.length < n) S.opps.push({n:null,col:null,folded:false});
+  while (S.opps.length < n) S.opps.push(makeDuoOpp());
   while (S.opps.length > n) { delete S.dtl[S.opps.length-1]; S.opps.pop(); }
   bustCache(); render();
 };
@@ -405,16 +484,21 @@ window.toggleRanks5 = ()   => { S5.showRanks5=!S5.showRanks5; render(); };
 window.toggleFold = i      => { S.opps[i].folded=!S.opps[i].folded; bustCache(); render(); };
 window.toggleFold5 = i     => { S5.opps[i].folded=!S5.opps[i].folded; bustCache(); render(); };
 window.setMode = m         => { S.mode=m; render(); };
+window.toggleFedora = ()   => { S.fedora=!S.fedora; bustCache(); render(); };
+window.toggleFedora5 = ()  => { S5.fedora=!S5.fedora; bustCache(); render(); };
+window.openMedia = (src, alt) => { S.media = { src, alt }; render(); };
+window.closeMedia = () => { S.media = null; render(); };
 
 // Five-Card specific handlers
 window.pickCard5 = (key, n, col) => {
   bustCache();
-  const obj = key.startsWith('o') ? S5.opps[+key.slice(1)] : S5.cards[+key.slice(1)];
+  const oppMatch = key.match(/^o(\d+)c(\d)$/);
+  const obj = oppMatch ? S5.opps[+oppMatch[1]].cards[+oppMatch[2]] : S5.cards[+key.slice(1)];
   if (obj.n===n && obj.col===col) { obj.n=null; obj.col=null; } else { obj.n=n; obj.col=col; }
   render();
 };
 window.setOppCount5 = n => {
-  while (S5.opps.length < n) S5.opps.push({n:null,col:null,folded:false});
+  while (S5.opps.length < n) S5.opps.push(makeFiveOpp());
   while (S5.opps.length > n) { delete S5.dtl[S5.opps.length-1]; S5.opps.pop(); }
   bustCache(); render();
 };
@@ -429,23 +513,23 @@ window.setSit5 = v   => { S5.raising=v; render(); };
 window.nextTour5 = () => {
   const n=S5.opps.length;
   S5.cards=Array.from({length:5},()=>({n:null,col:null}));
-  S5.opps=Array.from({length:n},()=>({n:null,col:null,folded:false}));
+  S5.opps=Array.from({length:n},()=>makeFiveOpp());
   S5.dtl={}; S5.raising=false; bustCache(); render();
 };
 window.resetAll5 = () => {
   S5.cards=Array.from({length:5},()=>({n:null,col:null}));
-  S5.opps=[{n:null,col:null,folded:false}];
+  S5.opps=[makeFiveOpp()];
   S5.dtl={}; S5.raising=false; bustCache(); render();
 };
 window.nextTour = () => {
   const n=S.opps.length;
   S.c1={n:null,col:null}; S.c2={n:null,col:null};
-  S.opps=Array.from({length:n},()=>({n:null,col:null,folded:false}));
+  S.opps=Array.from({length:n},()=>makeDuoOpp());
   S.dtl={}; S.raising=false; bustCache(); render();
 };
 window.resetAll = () => {
   S.c1={n:null,col:null}; S.c2={n:null,col:null};
-  S.opps=[{n:null,col:null,folded:false}];
+  S.opps=[makeDuoOpp()];
   S.dtl={}; S.raising=false; bustCache(); render();
 };
 

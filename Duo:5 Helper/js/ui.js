@@ -33,9 +33,21 @@ function handBehaviorNote(h, mode) {
   return tx('normalHand');
 }
 
+function cardCode(c) {
+  if (!c || !c.n || !c.col) return '—';
+  return `${c.col === 'red' ? 'R' : (S.lang === 'fr' ? 'J' : 'Y')}${c.n}`;
+}
+
 function adviceCardInfo(visOpps) {
   if (!visOpps || !visOpps.length) return '—';
-  return visOpps.map(o => `${o.col === 'red' ? 'R' : (S.lang === 'fr' ? 'J' : 'Y')}${o.n}`).join(', ');
+  if (S.mode === 'cinq') {
+    if (S5.fedora) return visOpps.map(o => o.cards.map(cardCode).join(' ')).join(' · ');
+    return visOpps.map(o => cardCode(o.cards[0])).join(', ');
+  }
+  if (S.fedora) {
+    return visOpps.map(o => `${cardCode({ n:o.n, col:o.col })} + ${cardCode({ n:o.n2, col:o.col2 })}`).join(' · ');
+  }
+  return visOpps.map(o => cardCode({ n:o.n, col:o.col })).join(', ');
 }
 
 function adviceThreshold(score, raising) {
@@ -92,7 +104,7 @@ function adviceDuo(w, l, tot, raising, myH, visOpps) {
   if (!raising && act===tx('check')) {
     notes += `<div class="advice-note" style="color:var(--c-faint)"><span class="ico" style="font-size:11px">tips_and_updates</span>${tx('s_check_bluff')}</div>`;
   }
-  if (visOpps && visOpps.length > 0 && wr < 0.55) {
+  if (!S.fedora && visOpps && visOpps.length > 0 && wr < 0.55) {
     const hasDangerCard = visOpps.some(o => o.n===1 || o.n===2 || o.n===10);
     if (hasDangerCard) {
       notes += `<div class="advice-note" style="color:#e9c176"><span class="ico" style="font-size:11px">visibility</span>${tx('s_opp_danger')}</div>`;
@@ -141,7 +153,7 @@ function adviceFive(w, l, tot, raising, myH, visOpps) {
     act, sub, col,
     score: wr,
     threshold: adviceThreshold(wr, raising),
-    visible: `${adviceCardInfo(visOpps)} · ${tx('f5VisibleNote')}`,
+    visible: S5.fedora ? adviceCardInfo(visOpps) : `${adviceCardInfo(visOpps)} · ${tx('f5VisibleNote')}`,
     behavior: handBehaviorNote(myH, 'cinq'),
     confidenceTag,
     notes: ''
@@ -149,12 +161,32 @@ function adviceFive(w, l, tot, raising, myH, visOpps) {
 }
 
 function renderBarRight(mode) {
+  const fedoraOn = mode === 'cinq' ? S5.fedora : S.fedora;
   const resetFn = mode === 'cinq' ? 'resetAll5()' : 'resetAll()';
   return `<div style="display:flex;align-items:center;gap:10px">
-    ${mode !== 'cheat' ? `<button class="top-pill subtle" onclick="${resetFn}"><span class="ico">refresh</span>${tx('reset')}</button>` : ''}
+    ${mode === 'duo' || mode === 'cinq' ? `<button class="top-pill subtle${fedoraOn?' on':''}" onclick="${mode === 'cinq' ? 'toggleFedora5()' : 'toggleFedora()'}"><span class="ico">visibility</span>${tx('fedoraToggle')}</button>` : ''}
+    ${mode !== 'cheat' && mode !== 'fedora' ? `<button class="top-pill subtle" onclick="${resetFn}"><span class="ico">refresh</span>${tx('reset')}</button>` : ''}
     <div class="lang-seg">
       <button class="${S.lang==='en'?'on':''}" onclick="setLang('en')"><span class="flag">🇬🇧</span>EN</button>
       <button class="${S.lang==='fr'?'on':''}" onclick="setLang('fr')"><span class="flag">🇫🇷</span>FR</button>
+    </div>
+  </div>`;
+}
+
+function mediaFrame(src, alt, label, labelCls = '') {
+  return `<button class="cheat-gif media-frame" onclick="openMedia('${src}','${alt.replace(/'/g, "\\'")}')" aria-label="${tx('clickZoom')}">
+    <img src="${src}" alt="${alt}" />
+    <div class="cheat-gif-label ${labelCls}">${label}</div>
+  </button>`;
+}
+
+function renderMediaViewer() {
+  if (!S.media) return '';
+  return `<div class="media-overlay" onclick="closeMedia()">
+    <div class="media-panel" onclick="event.stopPropagation()">
+      <button class="rules-close media-close" onclick="closeMedia()" aria-label="${tx('close')}"><span class="ico">close</span></button>
+      <div class="media-caption">${S.media.alt}</div>
+      <img class="media-image" src="${S.media.src}" alt="${S.media.alt}" />
     </div>
   </div>`;
 }
@@ -176,7 +208,7 @@ function chip(c, lbl) {
 }
 
 // ── Card selector (Duo hand + all opponents) ──────────────────────────────────
-function selector(c, key, lbl, isOpp, idx) {
+function selector(c, key, lbl, isOpp, idx, opts = {}) {
   const filled = c.n && c.col;
   const isR = c.col === 'red';
   const pfx = isR ? 'R' : (S.lang==='fr'?'J':'Y');
@@ -185,10 +217,10 @@ function selector(c, key, lbl, isOpp, idx) {
   const valLabel = filled ? `<span class="cslot5-val">${pfx}${c.n}</span>` : '';
 
   // Slot number: c1→1, c2→2, o0→1, o1→2, o2→3
-  const slotNum = key==='c1'?1 : key==='c2'?2 : (parseInt(key.slice(1))+1);
+  const slotNum = opts.slotNum ?? (key==='c1'?1 : key==='c2'?2 : (parseInt(key.slice(1), 10)+1));
 
   let foldBtn = '';
-  if (isOpp) {
+  if (isOpp && opts.showFold !== false) {
     const isFolded = c.folded;
     const fTxt = isFolded ? tx('unfold') : tx('foldBtn');
     foldBtn = `<button class="fold-btn${isFolded?' folded':''}" onclick="toggleFold(${idx})"><span class="ico">${isFolded?'undo':'block'}</span>${fTxt}</button>`;
@@ -223,7 +255,7 @@ function selector(c, key, lbl, isOpp, idx) {
 }
 
 // ── Five-Card selector ────────────────────────────────────────────────────────
-function selector5(c, key, lbl, isOpp, idx) {
+function selector5(c, key, lbl, isOpp, idx, opts = {}) {
   // ── Opponent slots: same panel layout ──
   if (isOpp) {
     const filled = c.n && c.col;
@@ -232,10 +264,10 @@ function selector5(c, key, lbl, isOpp, idx) {
     const numCls = filled ? (isR ? 'done-r' : 'done-y') : '';
     const panelCls = filled ? (isR ? 'filled-r' : 'filled-y') : '';
     const valLabel = filled ? `<span class="cslot5-val">${pfx}${c.n}</span>` : '';
-    const slotNum = idx + 1;
+    const slotNum = opts.slotNum ?? (idx + 1);
     const isFolded = c.folded;
     const fTxt = isFolded ? tx('unfold') : tx('foldBtn');
-    const foldBtn = `<button class="fold-btn${isFolded?' folded':''}" onclick="toggleFold5(${idx})"><span class="ico">${isFolded?'undo':'block'}</span>${fTxt}</button>`;
+    const foldBtn = opts.showFold === false ? '' : `<button class="fold-btn${isFolded?' folded':''}" onclick="toggleFold5(${idx})"><span class="ico">${isFolded?'undo':'block'}</span>${fTxt}</button>`;
 
     let h = `<div class="cslot5 ${panelCls}">
       <div class="cslot5-hd">
@@ -264,7 +296,7 @@ function selector5(c, key, lbl, isOpp, idx) {
   // ── My Hand slots: distinct bordered panel per card ──
   const filled = c.n && c.col;
   const isR = c.col === 'red';
-  const slotNum = parseInt(key.slice(1)) + 1; // c0→1, c1→2 …
+  const slotNum = opts.slotNum ?? (parseInt(key.slice(1), 10) + 1); // c0→1, c1→2 …
   const numCls = filled ? (isR ? 'done-r' : 'done-y') : '';
   const panelCls = filled ? (isR ? 'filled-r' : 'filled-y') : '';
   const pfx = isR ? 'R' : (S.lang==='fr'?'J':'Y');
@@ -290,6 +322,121 @@ function selector5(c, key, lbl, isOpp, idx) {
   }
   h += `</div></div>`;
   return h;
+}
+
+function cardRowsHTML(c, key, pickFn, takenFn) {
+  let h = `<div class="card-row">`;
+  for (let i=1;i<=10;i++) {
+    const on = c.n===i && c.col==='red';
+    const taken = !on && takenFn(i,'red',key);
+    h += `<button class="crb r${on?' sel':''}${taken?' taken':''}" ${taken?'':`onclick="${pickFn}('${key}',${i},'red')"`}>${i}</button>`;
+  }
+  h += `</div><div class="card-row">`;
+  for (let i=1;i<=10;i++) {
+    const on = c.n===i && c.col==='yellow';
+    const taken = !on && takenFn(i,'yellow',key);
+    h += `<button class="crb y${on?' sel':''}${taken?' taken':''}" ${taken?'':`onclick="${pickFn}('${key}',${i},'yellow')"`}>${i}</button>`;
+  }
+  h += `</div>`;
+  return h;
+}
+
+function slotMini(c, key, lbl, pickFn, takenFn, opts = {}) {
+  const filledCls = !c || !c.n || !c.col ? '' : (c.col === 'red' ? ' filled-r' : ' filled-y');
+  const markCls = opts.mark ? ` ${opts.mark}` : '';
+  const tag = opts.tag ? `<span class="slot-mini-tag ${opts.mark || ''}">${opts.tag}</span>` : '';
+  return `<div class="slot-mini${filledCls}${markCls}">
+    <div class="slot-mini-hd">
+      <span class="slot-mini-title">${lbl}${tag}</span>
+      <span class="slot-mini-val">${cardCode(c)}</span>
+    </div>
+    ${cardRowsHTML(c, key, pickFn, takenFn)}
+  </div>`;
+}
+
+function duoHandCase(a, b, opts = {}) {
+  const title = opts.title || tx('myHand');
+  const foldBtn = opts.foldBtn || '';
+  return `<div class="cslot5">
+    <div class="cslot5-hd">
+      <span class="cslot5-lbl" style="margin-left:0">${title}</span>
+      ${foldBtn}
+    </div>
+    ${opts.summary || ''}
+    <div class="multi-slot slot-grid-2${opts.folded?' is-folded':''}" style="${opts.folded?'opacity:0.4;pointer-events:none;':''}">
+      ${slotMini(a, opts.keyA, tx('c1'), 'pickCard', isTaken)}
+      ${slotMini(b, opts.keyB, tx('c2'), 'pickCard', isTaken)}
+    </div>
+  </div>`;
+}
+
+function fiveHandCase(cards, idx, opts = {}) {
+  const labels = S.lang === 'fr'
+    ? ['Carte 1','Carte 2','Carte 3','Carte 4','Carte 5']
+    : ['Card 1','Card 2','Card 3','Card 4','Card 5'];
+  const foldBtn = opts.foldBtn || '';
+  const baseIdxs = new Set(opts.baseIdxs || []);
+  const handIdxs = new Set(opts.handIdxs || []);
+  const keyPrefix = opts.keyPrefix || `o${idx}c`;
+  const tagFor = cardIdx => {
+    if (handIdxs.has(cardIdx)) return { mark:'hand', tag:'HAND' };
+    if (baseIdxs.has(cardIdx)) return { mark:'base', tag:'BASE' };
+    return {};
+  };
+  return `<div class="cslot5">
+    <div class="cslot5-hd">
+      <span class="cslot5-lbl" style="margin-left:0">${opts.title || tx('fedoraOpponent', idx + 1)}</span>
+      ${foldBtn}
+    </div>
+    ${opts.summary || ''}
+    <div class="multi-slot slot-grid-5cards" style="${opts.folded?'opacity:0.4;pointer-events:none;':''}">
+      ${cards.map((card, cardIdx) => slotMini(card, `${keyPrefix}${cardIdx}`, labels[cardIdx], 'pickCard5', isTaken5, tagFor(cardIdx))).join('')}
+    </div>
+  </div>`;
+}
+
+function duoOpponentSelector(o, idx) {
+  const foldBtn = `<button class="fold-btn${o.folded?' folded':''}" onclick="toggleFold(${idx})"><span class="ico">${o.folded?'undo':'block'}</span>${o.folded?tx('unfold'):tx('foldBtn')}</button>`;
+  if (!S.fedora) {
+    return selector(o, `o${idx}a`, tx('oppCard', idx + 1), true, idx, { slotNum:1, showFold:true });
+  }
+  const summary = o.n && o.col && o.n2 && o.col2
+    ? `<div class="hand-pill-inline compact flush">${handName(evalHand({n:o.n,col:o.col},{n:o.n2,col:o.col2}))}</div>`
+    : '';
+  return duoHandCase(
+    { n:o.n, col:o.col, folded:o.folded },
+    { n:o.n2, col:o.col2, folded:o.folded },
+    { title: tx('fedoraOpponent', idx + 1), keyA:`o${idx}a`, keyB:`o${idx}b`, foldBtn, folded:o.folded, summary }
+  );
+}
+
+function fiveOpponentSelector(o, idx) {
+  if (!S5.fedora) {
+    return selector5({ ...o.cards[0], folded:o.folded }, `o${idx}c0`, tx('oppCard', idx + 1), true, idx, { slotNum:1, showFold:true });
+  }
+  const foldBtn = `<button class="fold-btn${o.folded?' folded':''}" onclick="toggleFold5(${idx})"><span class="ico">${o.folded?'undo':'block'}</span>${o.folded?tx('unfold'):tx('foldBtn')}</button>`;
+  const resolved = o.cards.every(card => card.n && card.col) ? evalFiveCardHand(o.cards) : null;
+  const baseIdxs = [];
+  const handIdxs = [];
+  if (resolved && !resolved.bust && resolved.base) {
+    o.cards.forEach((card, cardIdx) => {
+      if (resolved.base.includes(card)) baseIdxs.push(cardIdx);
+      else handIdxs.push(cardIdx);
+    });
+  }
+  return fiveHandCase(o.cards, idx, {
+    title: tx('fedoraOpponent', idx + 1),
+    foldBtn,
+    folded:o.folded,
+    baseIdxs,
+    handIdxs,
+    summary: resolved ? (() => {
+      if (resolved.bust) return `<div class="hand-pill-inline compact flush" style="background:rgba(248,113,113,.1);border-color:rgba(248,113,113,.35);color:#f87171">${S.lang==='fr'?'Échec — Défaite automatique':'Bust — Automatic loss'}</div>`;
+      const baseStr = resolved.base.map(b=>(b.col==='red'?'R':(S.lang==='fr'?'J':'Y'))+b.n).join('+');
+      const baseSum = resolved.base.reduce((s,b)=>s+b.n,0);
+      return `<div class="hand-pill-inline compact flush">${handName(resolved.hand)}</div><div class="opp-meta"><strong>${S.lang==='fr'?'Base :':'Base:'}</strong> ${baseStr} = ${baseSum}</div>`;
+    })() : ''
+  });
 }
 
 // ── Odds bar ──────────────────────────────────────────────────────────────────

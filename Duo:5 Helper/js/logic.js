@@ -249,46 +249,80 @@ function available() {
   const used = [];
   if (S.c1.n&&S.c1.col) used.push(S.c1);
   if (S.c2.n&&S.c2.col) used.push(S.c2);
-  S.opps.forEach(o => { if (o.n&&o.col) used.push(o); });
+  S.opps.forEach(o => {
+    if (o.n&&o.col) used.push({ n:o.n, col:o.col });
+    if (S.fedora && o.n2&&o.col2) used.push({ n:o.n2, col:o.col2 });
+  });
   return removeKnownCards(DECK, used);
 }
 
 function computeOdds(myH, visOpps) {
-  const k = `duo|${serializeCards([S.c1, S.c2])}|${serializeCards(visOpps)}`;
+  const oppKey = visOpps.map(o => {
+    const lead = `${o.n}${o.col[0]}`;
+    return S.fedora && o.n2 && o.col2 ? `${lead}-${o.n2}${o.col2[0]}` : lead;
+  }).sort().join(',');
+  const k = `duo|${S.fedora?'fedora':'normal'}|${serializeCards([S.c1, S.c2])}|${oppKey}`;
   if (cache[k]) return cache[k];
 
-  const pool = available();
-  const perOpp = visOpps.map(opp => {
-    let w=0,l=0,ti=0; const dtl=[];
-    pool.forEach(unk => {
-      const oh = evalHand(opp, unk);
-      const res = cmp(myH, oh);
-      if (res==='win') w++; else if (res==='lose') l++; else ti++;
-      dtl.push({ card:unk, oh, res });
-    });
-    const tot = pool.length;
-    return { w,l,ti,tot,dtl };
-  });
-
+  let perOpp;
   let combo = null;
-  if (visOpps.length >= 2) {
-    let cw=0,cl=0,ct=0;
-    (function rec(i, res, rem) {
-      if (i===visOpps.length) {
-        if (res.every(r=>r==='win')) cw++;
-        else if (res.some(r=>r==='lose')) cl++;
-        else ct++;
-        return;
-      }
-      rem.forEach((unk, idx) => {
-        res.push(cmp(myH, evalHand(visOpps[i], unk)));
-        rec(i+1, res, rem.filter((_, rIdx) => rIdx !== idx));
-        res.pop();
+
+  if (S.fedora) {
+    perOpp = visOpps.map(opp => {
+      const oppHidden = { n:opp.n2, col:opp.col2 };
+      const oh = evalHand({ n:opp.n, col:opp.col }, oppHidden);
+      const res = cmp(myH, oh);
+      return {
+        w: res === 'win' ? 1 : 0,
+        l: res === 'lose' ? 1 : 0,
+        ti: res === 'tie' ? 1 : 0,
+        tot: 1,
+        dtl: [{ card: oppHidden, oh, res }]
+      };
+    });
+
+    if (visOpps.length >= 2) {
+      const results = perOpp.map(r => r.w ? 'win' : r.l ? 'lose' : 'tie');
+      combo = {
+        w: results.every(r => r === 'win') ? 1 : 0,
+        l: results.some(r => r === 'lose') ? 1 : 0,
+        ti: !results.some(r => r === 'lose') && !results.every(r => r === 'win') ? 1 : 0,
+        tot: 1
+      };
+    }
+  } else {
+    const pool = available();
+    perOpp = visOpps.map(opp => {
+      let w=0,l=0,ti=0; const dtl=[];
+      pool.forEach(unk => {
+        const oh = evalHand({ n:opp.n, col:opp.col }, unk);
+        const res = cmp(myH, oh);
+        if (res==='win') w++; else if (res==='lose') l++; else ti++;
+        dtl.push({ card:unk, oh, res });
       });
-    })(0, [], pool);
-    let tot = 1;
-    for (let i = 0; i < visOpps.length; i++) tot *= (pool.length - i);
-    combo = { w:cw, l:cl, ti:ct, tot };
+      const tot = pool.length;
+      return { w,l,ti,tot,dtl };
+    });
+
+    if (visOpps.length >= 2) {
+      let cw=0,cl=0,ct=0;
+      (function rec(i, res, rem) {
+        if (i===visOpps.length) {
+          if (res.every(r=>r==='win')) cw++;
+          else if (res.some(r=>r==='lose')) cl++;
+          else ct++;
+          return;
+        }
+        rem.forEach((unk, idx) => {
+          res.push(cmp(myH, evalHand({ n:visOpps[i].n, col:visOpps[i].col }, unk)));
+          rec(i+1, res, rem.filter((_, rIdx) => rIdx !== idx));
+          res.pop();
+        });
+      })(0, [], pool);
+      let tot = 1;
+      for (let i = 0; i < visOpps.length; i++) tot *= (pool.length - i);
+      combo = { w:cw, l:cl, ti:ct, tot };
+    }
   }
 
   cache[k] = { perOpp, combo };
@@ -299,7 +333,11 @@ function computeOdds(myH, visOpps) {
 function isTaken(num, col, key) {
   const all = [
     {k:'c1',card:S.c1},{k:'c2',card:S.c2},
-    ...S.opps.map((o,i)=>({k:'o'+i,card:o}))
+    ...S.opps.flatMap((o,i) => {
+      const cards = [{k:`o${i}a`,card:{ n:o.n, col:o.col }}];
+      if (S.fedora) cards.push({k:`o${i}b`,card:{ n:o.n2, col:o.col2 }});
+      return cards;
+    })
   ];
   return all.some(x => x.k!==key && x.card.n===num && x.card.col===col);
 }
@@ -307,7 +345,10 @@ function isTaken(num, col, key) {
 function isTaken5(num, col, key) {
   const all = [
     ...S5.cards.map((c,i) => ({k:'c'+i, card:c})),
-    ...S5.opps.map((o,i) => ({k:'o'+i, card:o}))
+    ...S5.opps.flatMap((o,i) => {
+      if (!S5.fedora) return [{k:`o${i}c0`, card:o.cards[0]}];
+      return o.cards.map((card, cardIdx) => ({k:`o${i}c${cardIdx}`, card}));
+    })
   ];
   return all.filter(x => x.k!==key && x.card.n===num && x.card.col===col).length >= 2;
 }
@@ -315,56 +356,97 @@ function isTaken5(num, col, key) {
 function available5() {
   const used = [];
   S5.cards.forEach(c => { if (c.n&&c.col) used.push(c); });
-  S5.opps.forEach(o => { if (o.n&&o.col) used.push(o); });
+  S5.opps.forEach(o => {
+    const limit = S5.fedora ? o.cards.length : 1;
+    for (let i = 0; i < limit; i++) {
+      const card = o.cards[i];
+      if (card.n && card.col) used.push(card);
+    }
+  });
   return removeKnownCards(DECK5, used);
 }
 
 function computeOdds5(myH, visOpps) {
-  const k5 = `five|${serializeCards(S5.cards)}|${serializeCards(visOpps)}`;
+  const oppKey = visOpps.map(o => {
+    const limit = S5.fedora ? o.cards.length : 1;
+    return o.cards.slice(0, limit).filter(c => c.n && c.col).map(c => `${c.n}${c.col[0]}`).join('-');
+  }).sort().join(',');
+  const k5 = `five|${S5.fedora?'fedora':'normal'}|${serializeCards(S5.cards)}|${oppKey}`;
   if (cache[k5]) return cache[k5];
-  const pool = available5();
-  const perOpp = visOpps.map(opp => {
-    let w=0,l=0,ti=0, tot=0;
-    const dtlMap = new Map();
-    forEachCombination(pool, 4, combo => {
-      const resolved = evalFiveCardHand([opp, ...combo]);
-      const res = resolved.bust ? 'win' : cmp5(myH, resolved.hand);
-      if (res==='win') w++; else if (res==='lose') l++; else ti++;
-      tot++;
-      const key = resolved.bust
-        ? `bust|${res}`
-        : `${resolved.hand.t}|${resolved.hand.num ?? ''}|${res}`;
-      const existing = dtlMap.get(key) || {
-        bust: !!resolved.bust,
-        hand: resolved.bust ? null : resolved.hand,
-        res,
-        count: 0
-      };
-      existing.count++;
-      dtlMap.set(key, existing);
-    });
-    const dtl = [...dtlMap.values()];
-    return { w,l,ti,tot,dtl };
-  });
   let combo = null;
-  if (visOpps.length >= 2) {
-    const trials = 12000;
-    let cw=0,cl=0,ct=0;
-    for (let t=0; t<trials; t++) {
-      const rem = shuffle(pool.slice());
-      let offset = 0;
-      const res = [];
-      for (let i=0; i<visOpps.length; i++) {
-        const cards = rem.slice(offset, offset + 4);
-        offset += 4;
-        const resolved = evalFiveCardHand([visOpps[i], ...cards]);
-        res.push(resolved.bust ? 'win' : cmp5(myH, resolved.hand));
-      }
-      if (res.every(r=>r==='win')) cw++;
-      else if (res.some(r=>r==='lose')) cl++;
-      else ct++;
+  let perOpp;
+
+  if (S5.fedora) {
+    perOpp = visOpps.map(opp => {
+      const resolved = evalFiveCardHand(opp.cards);
+      const res = resolved.bust ? 'win' : cmp5(myH, resolved.hand);
+      return {
+        w: res === 'win' ? 1 : 0,
+        l: res === 'lose' ? 1 : 0,
+        ti: res === 'tie' ? 1 : 0,
+        tot: 1,
+        dtl: [{
+          bust: !!resolved.bust,
+          hand: resolved.bust ? null : resolved.hand,
+          res,
+          count: 1
+        }]
+      };
+    });
+
+    if (visOpps.length >= 2) {
+      const results = perOpp.map(r => r.w ? 'win' : r.l ? 'lose' : 'tie');
+      combo = {
+        w: results.every(r => r === 'win') ? 1 : 0,
+        l: results.some(r => r === 'lose') ? 1 : 0,
+        ti: !results.some(r => r === 'lose') && !results.every(r => r === 'win') ? 1 : 0,
+        tot: 1
+      };
     }
-    combo={w:cw,l:cl,ti:ct,tot:trials, simulated:true};
+  } else {
+    const pool = available5();
+    perOpp = visOpps.map(opp => {
+      let w=0,l=0,ti=0, tot=0;
+      const dtlMap = new Map();
+      forEachCombination(pool, 4, combo => {
+        const resolved = evalFiveCardHand([opp.cards[0], ...combo]);
+        const res = resolved.bust ? 'win' : cmp5(myH, resolved.hand);
+        if (res==='win') w++; else if (res==='lose') l++; else ti++;
+        tot++;
+        const key = resolved.bust
+          ? `bust|${res}`
+          : `${resolved.hand.t}|${resolved.hand.num ?? ''}|${res}`;
+        const existing = dtlMap.get(key) || {
+          bust: !!resolved.bust,
+          hand: resolved.bust ? null : resolved.hand,
+          res,
+          count: 0
+        };
+        existing.count++;
+        dtlMap.set(key, existing);
+      });
+      const dtl = [...dtlMap.values()];
+      return { w,l,ti,tot,dtl };
+    });
+    if (visOpps.length >= 2) {
+      const trials = 12000;
+      let cw=0,cl=0,ct=0;
+      for (let t=0; t<trials; t++) {
+        const rem = shuffle(pool.slice());
+        let offset = 0;
+        const res = [];
+        for (let i=0; i<visOpps.length; i++) {
+          const cards = rem.slice(offset, offset + 4);
+          offset += 4;
+          const resolved = evalFiveCardHand([visOpps[i].cards[0], ...cards]);
+          res.push(resolved.bust ? 'win' : cmp5(myH, resolved.hand));
+        }
+        if (res.every(r=>r==='win')) cw++;
+        else if (res.some(r=>r==='lose')) cl++;
+        else ct++;
+      }
+      combo={w:cw,l:cl,ti:ct,tot:trials, simulated:true};
+    }
   }
   cache[k5]={perOpp,combo};return cache[k5];
 }
