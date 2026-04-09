@@ -415,7 +415,7 @@ function fiveOpponentSelector(o, idx) {
     return selector5({ ...o.cards[0], folded:o.folded }, `o${idx}c0`, tx('oppCard', idx + 1), true, idx, { slotNum:1, showFold:true });
   }
   const foldBtn = `<button class="fold-btn${o.folded?' folded':''}" onclick="toggleFold5(${idx})"><span class="ico">${o.folded?'undo':'block'}</span>${o.folded?tx('unfold'):tx('foldBtn')}</button>`;
-  const resolved = o.cards.every(card => card.n && card.col) ? evalFiveCardHand(o.cards) : null;
+  const resolved = o.cards.every(card => card.n && card.col) ? evalFiveCardShownHand(o.cards) : null;
   const baseIdxs = [];
   const handIdxs = [];
   if (resolved && !resolved.bust && resolved.base) {
@@ -597,13 +597,12 @@ function rankings() {
     body = `<div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
       <div>
         ${sec(fr?'Combinaisons Standard':'Standard Combinations',
-          rowDesc('1',fr?'Paire supérieure':'Superior Pair', 'R1 + R3 / R1 + R8', fr?'Exception documentée : la seule main qui bat la Paire de dix.':'Documented exception: the only hand that beats Ten Pair.','tag-r')+
-          rowDesc('2',n('ten_pair'),'10 + 10', fr?'Bat toutes les autres mains sauf la Paire supérieure.':'Beats every other hand except Superior Pair.','')+
-          rowDesc('3',fr?'Paires 9→1':'Pairs 9→1', fr?'Toute paire identique':'Any matching pair', fr?'Plus élevée gagne.':'Higher pair wins.','')+
-          rowDesc('4',n('perfect_nine'),fr?'Somme = 9':'Sum = 9', fr?'Main la plus forte après les Paires.':'Strongest hand after Pairs.','')+
-          rowDesc('5',fr?'Points 8→1':'Points 8→1', fr?'Chiffre des unités de la somme':'Units digit of the total sum', fr?'Le plus élevé gagne.':'Highest wins.','')+
-          rowDesc('6',n('zero'),fr?'Somme = 0':'Sum = 0', fr?'Hors mains supérieures.':'Outside higher-ranked hands.','')+
-          rowDesc('7',fr?'Échec':'Bust', fr?'Aucune combo 10/20/30':'No valid 10/20/30', fr?'Défaite automatique.':'Automatic loss.','')
+          rowDesc('1',n('ten_pair'),'10 + 10', fr?'Bat toutes les autres mains.':'Beats every other standard hand.','')+
+          rowDesc('2',fr?'Paires 9→1':'Pairs 9→1', fr?'Toute paire identique':'Any matching pair', fr?'Plus élevée gagne.':'Higher pair wins.','')+
+          rowDesc('3',n('perfect_nine'),fr?'Somme = 9':'Sum = 9', fr?'Main la plus forte après les Paires.':'Strongest hand after Pairs.','')+
+          rowDesc('4',fr?'Points 8→1':'Points 8→1', fr?'Chiffre des unités de la somme':'Units digit of the total sum', fr?'Le plus élevé gagne.':'Highest wins.','')+
+          rowDesc('5',n('zero'),fr?'Somme = 0':'Sum = 0', fr?'Hors mains supérieures.':'Outside higher-ranked hands.','')+
+          rowDesc('6',fr?'Échec':'Bust', fr?'Aucune combo 10/20/30':'No valid 10/20/30', fr?'Défaite automatique.':'Automatic loss.','')
         )}
       </div>
       <div>

@@ -70,7 +70,7 @@ function render() {
     document.getElementById('tab-fedora').className = 'mode-tab';
 
     const filledCount = S5.cards.filter(c=>c.n&&c.col).length;
-    const result5 = filledCount===5 ? evalFiveCardHand(S5.cards) : null;
+    const result5 = filledCount===5 ? evalFiveCardShownHand(S5.cards) : null;
     const myH5 = result5&&!result5.bust ? result5.hand : null;
     const validOpps5 = S5.opps.filter(o => {
       if (o.folded) return false;
@@ -426,10 +426,21 @@ function runRuleTests() {
   expect('Duo High Warden vs Pair 9', cmp(evalHand({n:4,col:'red'},{n:9,col:'red'}), evalHand({n:9,col:'red'},{n:9,col:'yellow'})), 'tie');
   expect('Duo High Warden vs Pair 10', cmp(evalHand({n:4,col:'red'},{n:9,col:'red'}), evalHand({n:10,col:'red'},{n:10,col:'yellow'})), 'lose');
   expect('Duo Executor vs Superior Pair', cmp(evalHand({n:4,col:'red'},{n:7,col:'red'}), evalHand({n:1,col:'red'},{n:3,col:'red'})), 'win');
-  expect('Five Ten Pair vs Superior Pair', cmp5(evalHand5({n:10,col:'red'},{n:10,col:'yellow'}), evalHand5({n:1,col:'red'},{n:3,col:'red'})), 'lose');
+  expect('Five Ten Pair vs Pair 9', cmp5(evalHand5({n:10,col:'red'},{n:10,col:'yellow'}), evalHand5({n:9,col:'red'},{n:9,col:'yellow'})), 'win');
   expect('Five Pair 9 vs Perfect Nine', cmp5(evalHand5({n:9,col:'red'},{n:9,col:'yellow'}), evalHand5({n:4,col:'red'},{n:5,col:'yellow'})), 'win');
+  expect(
+    'Five Y9 Y9 R2 R3 R1 resolves to 4 points',
+    evalFiveCardHand([
+      {n:9,col:'yellow'},
+      {n:9,col:'yellow'},
+      {n:2,col:'red'},
+      {n:3,col:'red'},
+      {n:1,col:'red'}
+    ]).hand.sum,
+    4
+  );
 
-  testStatus = { ok: failures.length === 0, count: 7, failed: failures };
+  testStatus = { ok: failures.length === 0, count: 8, failed: failures };
   if (!testStatus.ok) console.warn('Rule test failures:', failures);
   return testStatus;
 }

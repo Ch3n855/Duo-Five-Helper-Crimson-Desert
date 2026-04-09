@@ -23,9 +23,7 @@ function evalHand(a, b) {
 
 function evalHand5(a, b) {
   const lo = Math.min(a.n, b.n), hi = Math.max(a.n, b.n);
-  const both = a.col==='red' && b.col==='red';
   const sum  = (a.n + b.n) % 10;
-  if (lo===1&&(hi===3||hi===8)&&both)   return { t:'superior_pair', r:90, num:null, sum, fb:sum };
   if (lo===10&&hi===10)                 return { t:'ten_pair',      r:80, num:null, sum, fb:sum };
   if (lo===hi)                          return { t:'pair',          r:70+lo, num:lo, sum, fb:sum };
   if (sum===9)                          return { t:'perfect_nine',  r:50, num:null, sum, fb:9 };
@@ -66,10 +64,19 @@ function evalFiveCardHand(cards) {
   return { hand: bestHand, base: bestCombo3, bust: false };
 }
 
+// Five-Card resolution must be order-independent. The UI may present cards in
+// any slot order, but the game resolves from the full 5-card set.
+function evalFiveCardShownHand(cards) {
+  return evalFiveCardHand(cards);
+}
+
 function handName(h) {
   const tbl = HAND_NAMES[S.lang];
   if (h.t === 'pair')   return (S.lang==='fr' ? 'Paire de '+h.num : 'Pair of '+h.num+'s');
-  if (h.t === 'points') return h.sum + (S.lang==='fr' ? ' Points' : ' Points');
+  if (h.t === 'points') {
+    if (S.lang === 'fr') return `${h.sum} ${h.sum === 1 ? 'point' : 'points'}`;
+    return `${h.sum} ${h.sum === 1 ? 'Point' : 'Points'}`;
+  }
   return tbl[h.t] || h.t;
 }
 
@@ -211,7 +218,6 @@ function handSortRank(h) {
 
 function handSortRank5(h) {
   if (!h) return -1;
-  if (h.t === 'superior_pair') return 300;
   if (h.t === 'ten_pair') return 290;
   if (h.t === 'pair') return 200 + h.num;
   if (h.t === 'perfect_nine') return 190;
@@ -377,7 +383,7 @@ function computeOdds5(myH, visOpps) {
 
   if (S5.fedora) {
     perOpp = visOpps.map(opp => {
-      const resolved = evalFiveCardHand(opp.cards);
+      const resolved = evalFiveCardShownHand(opp.cards);
       const res = resolved.bust ? 'win' : cmp5(myH, resolved.hand);
       return {
         w: res === 'win' ? 1 : 0,
@@ -408,13 +414,13 @@ function computeOdds5(myH, visOpps) {
       let w=0,l=0,ti=0, tot=0;
       const dtlMap = new Map();
       forEachCombination(pool, 4, combo => {
-        const resolved = evalFiveCardHand([opp.cards[0], ...combo]);
+        const resolved = evalFiveCardShownHand([opp.cards[0], ...combo]);
         const res = resolved.bust ? 'win' : cmp5(myH, resolved.hand);
         if (res==='win') w++; else if (res==='lose') l++; else ti++;
         tot++;
         const key = resolved.bust
           ? `bust|${res}`
-          : `${resolved.hand.t}|${resolved.hand.num ?? ''}|${res}`;
+          : `${resolved.hand.t}|${resolved.hand.num ?? ''}|${resolved.hand.sum ?? resolved.hand.r}|${res}`;
         const existing = dtlMap.get(key) || {
           bust: !!resolved.bust,
           hand: resolved.bust ? null : resolved.hand,
@@ -437,7 +443,7 @@ function computeOdds5(myH, visOpps) {
         for (let i=0; i<visOpps.length; i++) {
           const cards = rem.slice(offset, offset + 4);
           offset += 4;
-          const resolved = evalFiveCardHand([visOpps[i].cards[0], ...cards]);
+          const resolved = evalFiveCardShownHand([visOpps[i].cards[0], ...cards]);
           res.push(resolved.bust ? 'win' : cmp5(myH, resolved.hand));
         }
         if (res.every(r=>r==='win')) cw++;
