@@ -74,7 +74,6 @@ Reworked with AI assistance.
 
 # Screenshots
 
-<img width="1425" height="645" alt="Image" src="https://github.com/user-attachments/assets/5b2a5e58-d5da-4678-804d-a48eeb4c75b5" />
-<img width="1425" height="645" alt="Image" src="https://github.com/user-attachments/assets/734479d7-b17a-48a3-9078-03fd376bf978" />
-<img width="1425" height="645" alt="Image" src="https://github.com/user-attachments/assets/b81eb60e-f0b4-4a49-9951-ca354b0d752f" />
-<img width="1431" height="649" alt="Image" src="https://github.com/user-attachments/assets/838d2acc-6c05-4c32-9f3e-1a51071d268b" />
+<img width="1432" height="645" alt="Image" src="https://github.com/user-attachments/assets/c40a3c7b-593b-4b15-b80b-10a35b399c7c" />
+<img width="1432" height="645" alt="Image" src="https://github.com/user-attachments/assets/2b7e8f3e-2d41-4a8b-ab91-caabb7435115" />
+<img width="1432" height="645" alt="Image" src="https://github.com/user-attachments/assets/15a7a821-ae25-4f8d-b342-ccd32f886502" />
